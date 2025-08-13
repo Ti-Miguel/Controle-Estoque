@@ -2,8 +2,16 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Controle de Estoque</title>
+  
+  <script>
+    // Bloqueia acesso direto se não estiver logado
+    if (!sessionStorage.getItem("logado")) {
+      window.location.href = "login.html";
+    }
+  </script>
+
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="logo.jpeg" type="image/jpeg" />
 </head>
@@ -17,11 +25,9 @@
       <button onclick="mostrarTela('relatorioHistorico')">Histórico</button>
       <button onclick="mostrarTela('materiais')">Gerenciar Materiais</button>
     </div>
-    <div class="footer-sidebar">
-      Criado por José Miguel
-    </div>
+
+    <button onclick="sair()">Sair</button>
   </div>
-  
 
   <div class="main">
     <h1>Controle de Estoque AmorSaúde Maringá</h1>
@@ -86,5 +92,12 @@
   </div>
 
   <script src="script.js"></script>
+
+  <script>
+    function sair() {
+      sessionStorage.removeItem("logado");
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>

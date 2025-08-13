@@ -1,139 +1,110 @@
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    display: flex;
-  }
-  
-  .sidebar {
-    width: 250px;
-    background-color: #64c2d1;
-    color: white;
-    padding: 20px;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-  }
-  
-  .sidebar h2 {
-    margin-top: 0;
-    text-align: center;
-  }
-  
-  .sidebar button {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    background-color: #ffffff;
-    color: #64c2d1;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .sidebar button:hover {
-    background-color: #d83c38;
-    color: white;
-  }
-  
-  .main {
-    margin-left: 270px;
-    padding: 20px;
-    flex-grow: 1;
-  }
-  
-  h1 {
-    color: #d83c38;
-    text-align: center;
-  }
-  
-  .container {
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0px 0px 10px #ccc;
-    margin-bottom: 30px;
-  }
-  
-  label {
-    display: block;
-    margin-top: 10px;
-    color: #333;
-  }
-  
-  input, select {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-  }
-  
-  button {
-    margin-top: 15px;
-    padding: 10px 15px;
-    background-color: #64c2d1;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #d83c38;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-  
-  th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: center;
-  }
-  
-  th {
-    background-color: #64c2d1;
-    color: white;
-  }
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  display: flex;
+}
 
-  .container input,
-.container select {
+.sidebar {
+  width: 250px;
+  background-color: #64c2d1;
+  color: white;
+  padding: 20px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.sidebar button {
   width: 100%;
-  box-sizing: border-box; 
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #ffffff;
+  color: #64c2d1;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.sidebar button:hover {
+  background-color: #d83c38;
+  color: white;
+}
+
+.main {
+  margin-left: 270px;
+  padding: 20px;
+  flex-grow: 1;
+}
+
+h1 {
+  color: #d83c38;
+  text-align: center;
+}
+
+.container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 0 10px #ccc;
+  margin-bottom: 30px;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+  color: #333;
+}
+
+input, select {
+  width: 100%;
   padding: 8px;
   margin-top: 5px;
   border-radius: 4px;
   border: 1px solid #ccc;
-  font-size: 1rem; 
+  box-sizing: border-box;
 }
 
-.sidebar {
-    width: 250px;
-    background-color: #64c2d1;
-    color: white;
-    padding: 20px;
-    height: 100vh;
-    position: fixed; 
-    top: 0;
-    left: 0;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* distribui espaço */
-  }
-  
-  .footer-sidebar {
-    text-align: center;
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-  
-  
+button {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: #64c2d1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #d83c38;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background-color: #64c2d1;
+  color: white;
+}
