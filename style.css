@@ -179,3 +179,13 @@ th {
   background-color: #64c2d1;
   color: white;
 }
+
+
+/* Linhas coloridas no histórico */
+#tabelaHistorico .linha-entrada {
+  background-color: #d4edda; /* verde claro */
+}
+
+#tabelaHistorico .linha-saida {
+  background-color: #f8d7da; /* vermelho claro */
+}

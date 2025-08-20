@@ -292,15 +292,24 @@ function atualizarRelatorioHistorico() {
       }
 
       historico.forEach(reg => {
-        const tr = document.createElement('tr');
-        ['tipo', 'material', 'data', 'quantidade', 'detalhes'].forEach(campo => {
-          const td = document.createElement('td');
-          td.textContent = reg[campo];
-          tr.appendChild(td);
-        });
-        tabela.appendChild(tr);
+      const tr = document.createElement('tr');
+
+      // Aplica classe pela movimentação
+      if (reg.tipo === 'Entrada') {
+        tr.classList.add('linha-entrada');
+      } else if (reg.tipo === 'Saída') {
+        tr.classList.add('linha-saida');
+      }
+    
+      ['tipo', 'material', 'data', 'quantidade', 'detalhes'].forEach(campo => {
+        const td = document.createElement('td');
+        td.textContent = reg[campo];
+        tr.appendChild(td);
       });
+      tabela.appendChild(tr);
     });
+    
+        });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
