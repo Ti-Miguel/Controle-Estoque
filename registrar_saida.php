@@ -40,4 +40,3 @@ $stmt->execute();
 
 echo "Saída registrada com sucesso!";
 $conn->close();
-?>

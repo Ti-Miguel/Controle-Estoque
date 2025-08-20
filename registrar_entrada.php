@@ -33,4 +33,3 @@ $stmt->execute();
 
 echo "Entrada registrada com sucesso!";
 $conn->close();
-?>

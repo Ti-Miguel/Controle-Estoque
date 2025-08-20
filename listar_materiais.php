@@ -1,10 +1,7 @@
 <?php
 include 'conexao.php';
 
-$sql = "SELECT tipo, material, data, quantidade, detalhes
-        FROM historico
-        ORDER BY id DESC";
-
+$sql = "SELECT id, nome, tipo FROM materiais ORDER BY nome ASC";
 $result = $conn->query($sql);
 $dados = [];
 

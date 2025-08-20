@@ -1,4 +1,3 @@
-
 // Atualiza os selects de material nos formulários
 function atualizarSelectsMateriais() {
   fetch('listar_estoque.php')
@@ -22,14 +21,16 @@ function atualizarSelectsMateriais() {
     });
 }
 
+// No carregamento da página, só chama atualizarListaMateriais() quando mostrar a tela de Materiais
 function mostrarTela(nomeTela) {
   const telas = ['entrada', 'saida', 'relatorioEstoque', 'relatorioHistorico', 'materiais'];
   telas.forEach(tela => {
     document.getElementById(tela).style.display = (tela === nomeTela) ? 'block' : 'none';
   });
+
   if (nomeTela === 'relatorioEstoque') atualizarRelatorioEstoque();
   if (nomeTela === 'relatorioHistorico') atualizarRelatorioHistorico();
-  if (nomeTela === 'materiais') atualizarListaMateriais();
+  if (nomeTela === 'materiais') atualizarListaMateriais(); // <<< aqui atualiza só o gerenciador
 }
 
 function adicionarMaterial() {
@@ -52,28 +53,144 @@ function adicionarMaterial() {
   });
 }
 
+// === Gerenciar Materiais: LISTAR com AÇÕES ===
 function atualizarListaMateriais() {
-  fetch('listar_estoque.php')
+  fetch('listar_materiais.php')
     .then(res => res.json())
     .then(materiais => {
       const divLista = document.getElementById('listaMateriais');
       divLista.innerHTML = '';
 
-      if (materiais.length === 0) {
+      if (!materiais || materiais.length === 0) {
         divLista.textContent = 'Nenhum material cadastrado.';
         return;
       }
 
-      const ul = document.createElement('ul');
+      const table = document.createElement('table');
+      table.className = 'tabela-materiais';
+      table.innerHTML = `
+        <tr>
+          <th style="width:50%;">Material</th>
+          <th style="width:25%;">Tipo</th>
+          <th style="width:25%;">Ações</th>
+        </tr>
+      `;
+
       materiais.forEach(m => {
-        const li = document.createElement('li');
-        li.textContent = `${m.nome} - Quantidade: ${m.quantidade}`;
-        ul.appendChild(li);
+        const tr = document.createElement('tr');
+        tr.dataset.id = m.id;
+
+        const tdNome = document.createElement('td');
+        tdNome.innerHTML = `<span class="nome-material">${m.nome}</span>`;
+        const tdTipo = document.createElement('td');
+        tdTipo.innerHTML = `<span class="tipo-material">${m.tipo}</span>`;
+        const tdAcoes = document.createElement('td');
+        tdAcoes.innerHTML = `
+          <button class="btn-acao btn-editar" onclick="editarMaterial(${m.id})">Editar</button>
+          <button class="btn-acao btn-excluir" onclick="excluirMaterial(${m.id})">Excluir</button>
+        `;
+
+        tr.appendChild(tdNome);
+        tr.appendChild(tdTipo);
+        tr.appendChild(tdAcoes);
+        table.appendChild(tr);
       });
-      divLista.appendChild(ul);
+
+      divLista.appendChild(table);
+    })
+    .catch(() => {
+      const divLista = document.getElementById('listaMateriais');
+      divLista.textContent = 'Erro ao carregar materiais.';
     });
 }
 
+function editarMaterial(id) {
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (!tr) return;
+
+  const nomeSpan = tr.querySelector('.nome-material');
+  const tipoSpan = tr.querySelector('.tipo-material');
+
+  const nomeAtual = nomeSpan.textContent;
+  const tipoAtual = tipoSpan.textContent;
+
+  tr.dataset.editing = '1';
+
+  // Inputs
+  nomeSpan.outerHTML = `<input type="text" class="input-editar nome-edit" value="${nomeAtual}">`;
+  tipoSpan.outerHTML = `
+    <select class="input-editar tipo-edit">
+      <option value="MATERIAL GRÁFICO" ${tipoAtual === 'MATERIAL GRÁFICO' ? 'selected' : ''}>MATERIAL GRÁFICO</option>
+      <option value="MATERIAL MÉDICO" ${tipoAtual === 'MATERIAL MÉDICO' ? 'selected' : ''}>MATERIAL MÉDICO</option>
+      <option value="MEDICAÇÕES" ${tipoAtual === 'MEDICAÇÕES' ? 'selected' : ''}>MEDICAÇÕES</option>
+    </select>`;
+
+  // Botões
+  const tdAcoes = tr.children[2];
+  tdAcoes.innerHTML = `
+    <button class="btn-acao btn-salvar" onclick="salvarEdicao(${id})">Salvar</button>
+    <button class="btn-acao btn-cancelar" onclick="cancelarEdicao(${id}, '${nomeAtual.replace(/'/g,"\\'")}', '${tipoAtual.replace(/'/g,"\\'")}')">Cancelar</button>
+  `;
+}
+
+function cancelarEdicao(id, nomeOriginal, tipoOriginal) {
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (!tr) return;
+
+  tr.children[0].innerHTML = `<span class="nome-material">${nomeOriginal}</span>`;
+  tr.children[1].innerHTML = `<span class="tipo-material">${tipoOriginal}</span>`;
+  tr.children[2].innerHTML = `
+    <button class="btn-acao btn-editar" onclick="editarMaterial(${id})">Editar</button>
+    <button class="btn-acao btn-excluir" onclick="excluirMaterial(${id})">Excluir</button>
+  `;
+  delete tr.dataset.editing;
+}
+
+function salvarEdicao(id) {
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (!tr) return;
+
+  const nome = tr.querySelector('.nome-edit').value.trim();
+  const tipo = tr.querySelector('.tipo-edit').value;
+
+  if (!nome) {
+    alert('Informe o nome do material.');
+    return;
+  }
+
+  fetch('atualizar_material.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: `id=${id}&nome=${encodeURIComponent(nome)}&tipo=${encodeURIComponent(tipo)}`
+  })
+  .then(res => res.text())
+  .then(msg => {
+    alert(msg);
+    atualizarListaMateriais();
+    atualizarSelectsMateriais();
+  })
+  .catch(() => alert('Erro ao atualizar material.'));
+}
+
+function excluirMaterial(id) {
+  if (!confirm('Tem certeza que deseja excluir este material?')) return;
+
+  fetch('excluir_material.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: `id=${id}`
+  })
+  .then(res => res.text())
+  .then(msg => {
+    alert(msg);
+    atualizarListaMateriais();
+    atualizarSelectsMateriais();
+    atualizarRelatorioEstoque();
+  })
+  .catch(() => alert('Erro ao excluir material.'));
+}
+
+// === Relatórios e movimentações ===
 function registrarEntrada() {
   const material = document.getElementById('materialEntrada').value;
   const data = document.getElementById('dataEntrada').value;
