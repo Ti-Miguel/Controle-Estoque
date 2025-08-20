@@ -246,12 +246,13 @@ function registrarSaida() {
 
 function atualizarRelatorioEstoque() {
   const tabela = document.getElementById('tabelaEstoque');
+  // Limpa tudo, mantendo o cabeçalho original
   tabela.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
 
   fetch('listar_estoque.php')
     .then(res => res.json())
     .then(dados => {
-      if (dados.length === 0) {
+      if (!dados || dados.length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 2;
@@ -261,7 +262,33 @@ function atualizarRelatorioEstoque() {
         return;
       }
 
-      dados.forEach(item => {
+      let tipoAtual = null;
+      // Opcional: subtotal por categoria
+      let subtotalCategoria = 0;
+
+      dados.forEach((item, idx) => {
+        // Quando muda a categoria, cria cabeçalho do grupo
+        if (item.tipo !== tipoAtual) {
+          // Se não é a primeira categoria e quiser mostrar subtotal
+          if (tipoAtual !== null) {
+            const trSub = document.createElement('tr');
+            trSub.className = 'grupo-subtotal';
+            trSub.innerHTML = `<td>Subtotal ${tipoAtual}</td><td>${subtotalCategoria}</td>`;
+            tabela.appendChild(trSub);
+            subtotalCategoria = 0;
+          }
+
+          tipoAtual = item.tipo;
+          const trGrupo = document.createElement('tr');
+          trGrupo.className = 'grupo-cabecalho';
+          const tdGrupo = document.createElement('td');
+          tdGrupo.colSpan = 2;
+          tdGrupo.textContent = tipoAtual;
+          trGrupo.appendChild(tdGrupo);
+          tabela.appendChild(trGrupo);
+        }
+
+        // Linha do item
         const tr = document.createElement('tr');
         const tdNome = document.createElement('td');
         const tdQtd = document.createElement('td');
@@ -270,6 +297,16 @@ function atualizarRelatorioEstoque() {
         tr.appendChild(tdNome);
         tr.appendChild(tdQtd);
         tabela.appendChild(tr);
+
+        subtotalCategoria += Number(item.quantidade) || 0;
+
+        // Último item: fecha com subtotal
+        if (idx === dados.length - 1) {
+          const trSub = document.createElement('tr');
+          trSub.className = 'grupo-subtotal';
+          trSub.innerHTML = `<td>Subtotal ${tipoAtual}</td><td>${subtotalCategoria}</td>`;
+          tabela.appendChild(trSub);
+        }
       });
     });
 }

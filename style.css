@@ -189,3 +189,51 @@ th {
 #tabelaHistorico .linha-saida {
   background-color: #f8d7da; /* vermelho claro */
 }
+
+/* Agrupamento por categoria no Relatório de Estoque */
+#tabelaEstoque .grupo-cabecalho td {
+  background: #eaf6ff;     /* azul bem claro */
+  color: #0b5d75;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+#tabelaEstoque .grupo-subtotal td {
+  background: #f4f9fb;
+  font-weight: 700;
+}
+
+/* Botões de categoria no Relatório de Estoque */
+.categorias-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 10px 0 6px 0;
+}
+
+.btn-categoria {
+  padding: 12px 16px;
+  background: #ffffff;
+  color: #0b5d75;
+  border: 2px solid #64c2d1;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform .06s ease, background .2s ease, color .2s ease;
+}
+
+.btn-categoria:hover {
+  background: #64c2d1;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.hint {
+  color: #555;
+  margin-top: 4px;
+}
+
+/* (já existentes do histórico, se ainda não adicionou) */
+#tabelaHistorico .linha-entrada { background-color: #d4edda; }
+#tabelaHistorico .linha-saida   { background-color: #f8d7da; }

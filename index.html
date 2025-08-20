@@ -63,10 +63,15 @@
     </div>
 
     <div id="relatorioEstoque" class="container" style="display:none;">
-      <h2>Itens em Estoque</h2>
-      <table id="tabelaEstoque">
-        <tr><th>Material</th><th>Quantidade</th></tr>
-      </table>
+      <h2>Relatório de Estoque</h2>
+
+      <div class="categorias-container">
+        <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL MÉDICO')">Material Médico</button>
+        <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL GRÁFICO')">Material Gráfico</button>
+        <button class="btn-categoria" onclick="abrirRelatorio('MEDICAÇÕES')">Medicações</button>
+      </div>
+
+      <p class="hint">Clique em uma categoria para abrir o relatório detalhado em outra página.</p>
     </div>
 
     <div id="relatorioHistorico" class="container" style="display:none;">
@@ -97,6 +102,11 @@
     function sair() {
       sessionStorage.removeItem("logado");
       window.location.href = "login.html";
+    }
+    // nova função: abre a página de relatório por categoria
+    function abrirRelatorio(tipo) {
+      const url = 'relatorio_categoria.html?tipo=' + encodeURIComponent(tipo);
+      window.location.href = url;
     }
   </script>
 </body>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Relatório por Categoria</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="logo.jpeg" type="image/jpeg" />
+  <style>
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .acoes {
+      display: flex;
+      gap: 8px;
+    }
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      background: #64c2d1;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn:hover { background: #d83c38; }
+    @media print {
+      .topbar .btn,
+      .topbar .acoes { display: none !important; }
+      body { background: #fff !important; }
+    }
+  </style>
+</head>
+<body style="display:block; background:#f4f4f4;">
+  <div class="main" style="margin:20px auto; max-width: 1000px;">
+    <div class="container">
+      <div class="topbar">
+        <h2 id="tituloCategoria">Relatório</h2>
+        <div class="acoes">
+          <button class="btn" onclick="voltar()">← Voltar</button>
+          <button class="btn" id="btnExcel">Exportar Excel</button>
+          <button class="btn" id="btnPDF">Exportar PDF</button>
+        </div>
+      </div>
+      <table id="tabelaCategoria">
+        <tr><th>Material</th><th>Quantidade</th></tr>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function getParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name) || '';
+    }
+    function voltar() {
+      window.location.href = 'index.html';
+    }
+
+    function carregarRelatorio() {
+      const tipo = getParam('tipo');
+      document.getElementById('tituloCategoria').textContent = `Relatório – ${tipo || 'Categoria'}`;
+
+      const tabela = document.getElementById('tabelaCategoria');
+      tabela.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
+
+      fetch('listar_estoque_por_tipo.php?tipo=' + encodeURIComponent(tipo))
+        .then(res => res.json())
+        .then(dados => {
+          if (!dados || dados.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 2;
+            td.textContent = 'Nenhum material encontrado para esta categoria.';
+            tr.appendChild(td);
+            tabela.appendChild(tr);
+          } else {
+            dados.forEach(item => {
+              const tr = document.createElement('tr');
+              const tdNome = document.createElement('td');
+              const tdQtd = document.createElement('td');
+              tdNome.textContent = item.nome;
+              tdQtd.textContent = item.quantidade;
+              tr.appendChild(tdNome);
+              tr.appendChild(tdQtd);
+              tabela.appendChild(tr);
+            });
+          }
+        })
+        .catch(() => {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 2;
+          td.textContent = 'Erro ao carregar o relatório.';
+          tr.appendChild(td);
+          tabela.appendChild(tr);
+        });
+
+      // Configurar botões
+      document.getElementById('btnExcel').onclick = () => {
+        window.location.href = 'exportar_estoque_excel.php?tipo=' + encodeURIComponent(tipo);
+      };
+      document.getElementById('btnPDF').onclick = () => {
+        // usa a impressão do navegador; selecione "Salvar como PDF"
+        window.print();
+      };
+    }
+
+    document.addEventListener('DOMContentLoaded', carregarRelatorio);
+  </script>
+</body>
+</html>

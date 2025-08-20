@@ -1,10 +1,10 @@
 <?php
 include 'conexao.php';
 
-$sql = "SELECT m.nome, e.quantidade
+$sql = "SELECT m.nome, m.tipo, e.quantidade
         FROM estoque e
         JOIN materiais m ON e.material_id = m.id
-        ORDER BY m.nome ASC";
+        ORDER BY m.tipo ASC, m.nome ASC";
 
 $result = $conn->query($sql);
 $dados = [];
