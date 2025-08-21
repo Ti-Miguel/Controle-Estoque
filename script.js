@@ -1,3 +1,11 @@
+/****************************************************
+ * CONTROLE DE ESTOQUE - script.js (ID safe)
+ * - Editar/Excluir materiais via ID
+ * - Dashboard
+ * - Histórico colorido
+ * - Relatórios
+ ****************************************************/
+
 /***********************
  * SELECTS DE MATERIAIS
  ***********************/
@@ -6,19 +14,21 @@ function atualizarSelectsMateriais() {
     .then(res => res.json())
     .then(dados => {
       const selectEntrada = document.getElementById('materialEntrada');
-      const selectSaida = document.getElementById('materialSaida');
+      const selectSaida   = document.getElementById('materialSaida');
       if (!selectEntrada || !selectSaida) return;
 
       selectEntrada.innerHTML = '';
-      selectSaida.innerHTML = '';
+      selectSaida.innerHTML   = '';
 
       dados.forEach(item => {
         const opt1 = document.createElement('option');
         opt1.value = item.nome;
         opt1.textContent = item.nome;
+
         const opt2 = document.createElement('option');
         opt2.value = item.nome;
         opt2.textContent = item.nome;
+
         selectEntrada.appendChild(opt1);
         selectSaida.appendChild(opt2);
       });
@@ -30,14 +40,14 @@ function atualizarSelectsMateriais() {
  * NAVEGAÇÃO ENTRE TELAS
  ***********************/
 function mostrarTela(nomeTela) {
-  // Inclui o dashboard aqui!
+  // Inclui o dashboard na lista de telas
   const telas = ['dashboard', 'entrada', 'saida', 'relatorioEstoque', 'relatorioHistorico', 'materiais'];
-  telas.forEach(t => {
-    const el = document.getElementById(t);
-    if (el) el.style.display = (t === nomeTela) ? 'block' : 'none';
+  telas.forEach(tela => {
+    const el = document.getElementById(tela);
+    if (el) el.style.display = (tela === nomeTela) ? 'block' : 'none';
   });
 
-  // Carregamentos on-demand
+  // Carregamento sob demanda
   if (nomeTela === 'relatorioEstoque' && typeof atualizarRelatorioEstoque === 'function') {
     atualizarRelatorioEstoque();
   }
@@ -53,7 +63,7 @@ function mostrarTela(nomeTela) {
 }
 
 /***********************
- * GERENCIAR MATERIAIS
+ * GERENCIAR MATERIAIS (com ID)
  ***********************/
 function adicionarMaterial() {
   const nome = (document.getElementById('novoMaterial')?.value || '').trim();
@@ -78,14 +88,13 @@ function adicionarMaterial() {
 }
 
 function atualizarListaMateriais() {
-  fetch('listar_materiais.php')
+  fetch('listar_materiais.php') // deve retornar id, nome, tipo
     .then(res => res.json())
     .then(materiais => {
       const div = document.getElementById('listaMateriais');
       if (!div) return;
       div.innerHTML = '';
 
-      // Wrapper com scroll em telas pequenas
       const wrap = document.createElement('div');
       wrap.className = 'table-responsive';
 
@@ -94,34 +103,35 @@ function atualizarListaMateriais() {
       table.innerHTML = `
         <thead>
           <tr>
+            <th style="width:10%">ID</th>
             <th style="width:45%">Nome</th>
-            <th style="width:35%">Tipo</th>
+            <th style="width:25%">Tipo</th>
             <th style="width:20%">Ações</th>
           </tr>
         </thead>
         <tbody></tbody>
       `;
-
       const tbody = table.querySelector('tbody');
 
       if (!materiais || materiais.length === 0) {
         const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 3;
-        td.textContent = 'Nenhum material cadastrado.';
-        tr.appendChild(td);
+        tr.innerHTML = `<td colspan="4">Nenhum material cadastrado.</td>`;
         tbody.appendChild(tr);
       } else {
         materiais.forEach(m => {
           const tr = document.createElement('tr');
 
+          const tdId   = document.createElement('td');
+          tdId.textContent = m.id;
+
           const tdNome = document.createElement('td');
           tdNome.innerHTML = `<span class="nome-material">${m.nome}</span>`;
+
           const tdTipo = document.createElement('td');
           tdTipo.innerHTML = `<span class="tipo-material">${m.tipo}</span>`;
+
           const tdAcoes = document.createElement('td');
 
-          // Botões Editar / Excluir
           const btnEditar = document.createElement('button');
           btnEditar.className = 'btn-acao btn-editar';
           btnEditar.textContent = 'Editar';
@@ -130,11 +140,12 @@ function atualizarListaMateriais() {
           const btnExcluir = document.createElement('button');
           btnExcluir.className = 'btn-acao btn-excluir';
           btnExcluir.textContent = 'Excluir';
-          btnExcluir.onclick = () => excluirMaterial(m);
+          btnExcluir.onclick = () => excluirMaterial(m.id, m.nome);
 
           tdAcoes.appendChild(btnEditar);
           tdAcoes.appendChild(btnExcluir);
 
+          tr.appendChild(tdId);
           tr.appendChild(tdNome);
           tr.appendChild(tdTipo);
           tr.appendChild(tdAcoes);
@@ -152,7 +163,7 @@ function atualizarListaMateriais() {
 }
 
 function entrarModoEdicao(tr, material) {
-  const [tdNome, tdTipo, tdAcoes] = tr.children;
+  const [tdId, tdNome, tdTipo, tdAcoes] = tr.children;
 
   const inputNome = document.createElement('input');
   inputNome.className = 'input-editar';
@@ -178,7 +189,7 @@ function entrarModoEdicao(tr, material) {
   const btnSalvar = document.createElement('button');
   btnSalvar.className = 'btn-acao btn-salvar';
   btnSalvar.textContent = 'Salvar';
-  btnSalvar.onclick = () => salvarEdicao(material, inputNome.value.trim(), selectTipo.value);
+  btnSalvar.onclick = () => salvarEdicao(material.id, inputNome.value.trim(), selectTipo.value);
 
   const btnCancelar = document.createElement('button');
   btnCancelar.className = 'btn-acao btn-cancelar';
@@ -189,14 +200,12 @@ function entrarModoEdicao(tr, material) {
   tdAcoes.appendChild(btnCancelar);
 }
 
-function salvarEdicao(materialOriginal, novoNome, novoTipo) {
+function salvarEdicao(id, novoNome, novoTipo) {
   if (!novoNome) return alert('Informe o nome do material.');
-  // Você pode criar um endpoint editar_material.php.
-  // Como não foi enviado, aqui vai um POST genérico esperado:
   fetch('editar_material.php', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: `nome_antigo=${encodeURIComponent(materialOriginal.nome)}&novo_nome=${encodeURIComponent(novoNome)}&novo_tipo=${encodeURIComponent(novoTipo)}`
+    body: `id=${encodeURIComponent(id)}&novo_nome=${encodeURIComponent(novoNome)}&novo_tipo=${encodeURIComponent(novoTipo)}`
   })
   .then(res => res.text())
   .then(msg => {
@@ -207,13 +216,12 @@ function salvarEdicao(materialOriginal, novoNome, novoTipo) {
   .catch(() => alert('Erro ao salvar edição.'));
 }
 
-function excluirMaterial(material) {
-  if (!confirm(`Tem certeza que deseja excluir "${material.nome}"?`)) return;
-  // Você pode criar um endpoint excluir_material.php.
+function excluirMaterial(id, nome) {
+  if (!confirm(`Tem certeza que deseja excluir "${nome}"?`)) return;
   fetch('excluir_material.php', {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: `nome=${encodeURIComponent(material.nome)}`
+    body: `id=${encodeURIComponent(id)}`
   })
   .then(res => res.text())
   .then(msg => {
@@ -228,10 +236,10 @@ function excluirMaterial(material) {
  * ENTRADA / SAÍDA
  ***********************/
 function registrarEntrada() {
-  const material = document.getElementById('materialEntrada')?.value;
-  const data = document.getElementById('dataEntrada')?.value;
+  const material   = document.getElementById('materialEntrada')?.value;
+  const data       = document.getElementById('dataEntrada')?.value;
   const quantidade = parseInt(document.getElementById('quantidadeEntrada')?.value, 10);
-  const tipo = document.getElementById('tipoEntrada')?.value;
+  const tipo       = document.getElementById('tipoEntrada')?.value;
 
   if (!material || !data || isNaN(quantidade) || quantidade <= 0) {
     alert('Preencha todos os campos corretamente.');
@@ -248,15 +256,17 @@ function registrarEntrada() {
     alert(msg);
     atualizarRelatorioEstoque();
     atualizarRelatorioHistorico();
-    document.getElementById('quantidadeEntrada').value = '';
-    document.getElementById('dataEntrada').value = '';
+    const q = document.getElementById('quantidadeEntrada');
+    const d = document.getElementById('dataEntrada');
+    if (q) q.value = '';
+    if (d) d.value = '';
   })
   .catch(() => alert('Erro ao registrar entrada.'));
 }
 
 function registrarSaida() {
-  const material = document.getElementById('materialSaida')?.value;
-  const data = document.getElementById('dataSaida')?.value;
+  const material   = document.getElementById('materialSaida')?.value;
+  const data       = document.getElementById('dataSaida')?.value;
   const quantidade = parseInt(document.getElementById('quantidadeSaida')?.value, 10);
   const responsavel = (document.getElementById('responsavelSaida')?.value || '').trim();
 
@@ -275,20 +285,24 @@ function registrarSaida() {
     alert(msg);
     atualizarRelatorioEstoque();
     atualizarRelatorioHistorico();
-    document.getElementById('quantidadeSaida').value = '';
-    document.getElementById('dataSaida').value = '';
-    document.getElementById('responsavelSaida').value = '';
+    const q = document.getElementById('quantidadeSaida');
+    const d = document.getElementById('dataSaida');
+    const r = document.getElementById('responsavelSaida');
+    if (q) q.value = '';
+    if (d) d.value = '';
+    if (r) r.value = '';
   })
   .catch(() => alert('Erro ao registrar saída.'));
 }
 
 /***********************
- * RELATÓRIO DE ESTOQUE (tabela geral — caso você reexiba)
+ * RELATÓRIO DE ESTOQUE (tabela geral oculta por padrão)
  ***********************/
 function atualizarRelatorioEstoque() {
   const tabela = document.getElementById('tabelaEstoque');
   if (!tabela) return;
 
+  // limpa linhas (mantém header)
   tabela.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
 
   fetch('listar_estoque.php')
@@ -296,10 +310,7 @@ function atualizarRelatorioEstoque() {
     .then(dados => {
       if (!dados || dados.length === 0) {
         const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 2;
-        td.textContent = 'Nenhum material em estoque.';
-        tr.appendChild(td);
+        tr.innerHTML = `<td colspan="2">Nenhum material em estoque.</td>`;
         tabela.appendChild(tr);
         return;
       }
@@ -314,13 +325,13 @@ function atualizarRelatorioEstoque() {
 }
 
 /***********************
- * HISTÓRICO (com coloração)
+ * HISTÓRICO (com coloração de linhas)
  ***********************/
 function atualizarRelatorioHistorico() {
   const tabela = document.getElementById('tabelaHistorico');
   if (!tabela) return;
 
-  // Remove linhas antigas
+  // limpa linhas (mantém header)
   tabela.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
 
   fetch('listar_historico.php')
@@ -328,10 +339,7 @@ function atualizarRelatorioHistorico() {
     .then(historico => {
       if (!historico || historico.length === 0) {
         const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 5;
-        td.textContent = 'Nenhuma movimentação registrada.';
-        tr.appendChild(td);
+        tr.innerHTML = `<td colspan="5">Nenhuma movimentação registrada.</td>`;
         tabela.appendChild(tr);
         return;
       }
@@ -339,9 +347,8 @@ function atualizarRelatorioHistorico() {
       historico.forEach(reg => {
         const tr = document.createElement('tr');
 
-        // adiciona as classes para colorir a linha
-        if (reg.tipo === 'Entrada') tr.classList.add('linha-entrada');
-        else if (reg.tipo === 'Saída') tr.classList.add('linha-saida');
+        if (reg.tipo === 'Entrada') tr.classList.add('linha-entrada'); // verde claro (CSS)
+        else if (reg.tipo === 'Saída') tr.classList.add('linha-saida'); // vermelho claro (CSS)
 
         ['tipo', 'material', 'data', 'quantidade', 'detalhes'].forEach(campo => {
           const td = document.createElement('td');
@@ -358,7 +365,7 @@ function atualizarRelatorioHistorico() {
  * DASHBOARD
  ***********************/
 function atualizarDashboard() {
-  // Materiais
+  // 1) Materiais cadastrados
   fetch('listar_materiais.php')
     .then(r => r.json())
     .then(mats => {
@@ -370,7 +377,7 @@ function atualizarDashboard() {
       if (el) el.textContent = '—';
     });
 
-  // Estoque total + baixo estoque
+  // 2) Estoque total + baixo estoque
   fetch('listar_estoque.php')
     .then(r => r.json())
     .then(estoque => {
@@ -379,19 +386,17 @@ function atualizarDashboard() {
       if (card) card.textContent = total;
 
       const LIMITE = 5;
-      const baixo = (estoque || []).filter(it => (Number(it.quantidade) || 0) <= LIMITE)
-                                   .sort((a,b)=> (a.quantidade||0) - (b.quantidade||0))
-                                   .slice(0, 8);
+      const baixo = (estoque || [])
+        .filter(it => (Number(it.quantidade) || 0) <= LIMITE)
+        .sort((a, b) => (a.quantidade || 0) - (b.quantidade || 0))
+        .slice(0, 8);
 
       const tabela = document.getElementById('tabelaBaixoEstoque');
       if (tabela) {
         tabela.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
         if (baixo.length === 0) {
           const tr = document.createElement('tr');
-          const td = document.createElement('td');
-          td.colSpan = 2;
-          td.textContent = 'Sem itens em baixo estoque.';
-          tr.appendChild(td);
+          tr.innerHTML = `<td colspan="2">Sem itens em baixo estoque.</td>`;
           tabela.appendChild(tr);
         } else {
           baixo.forEach(item => {
@@ -403,21 +408,21 @@ function atualizarDashboard() {
       }
     })
     .catch(() => {
-      const el = document.getElementById('cardEstoque');
-      if (el) el.textContent = '—';
+      const card = document.getElementById('cardEstoque');
+      if (card) card.textContent = '—';
     });
 
-  // Entradas/Saídas do mês + últimas movimentações
+  // 3) Entradas/Saídas do mês + últimas 5 movimentações
   fetch('listar_historico.php')
     .then(r => r.json())
     .then(hist => {
       const agora = new Date();
-      const mes = agora.getMonth();  // 0..11
+      const mes = agora.getMonth();   // 0..11
       const ano = agora.getFullYear();
 
       let entradasMes = 0, saidasMes = 0;
 
-      // Últimas 5
+      // últimas 5
       const tabelaUlt = document.getElementById('tabelaUltimasMov');
       if (tabelaUlt) {
         tabelaUlt.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
@@ -436,7 +441,6 @@ function atualizarDashboard() {
       }
 
       (hist || []).forEach(reg => {
-        // espera formato YYYY-MM-DD
         const [y, m] = (reg.data || '').split('-').map(n => parseInt(n, 10));
         if (!isNaN(y) && !isNaN(m) && y === ano && (m - 1) === mes) {
           const qtd = Number(reg.quantidade) || 0;
@@ -459,11 +463,11 @@ function atualizarDashboard() {
 }
 
 /***********************
- * INICIALIZAÇÃO LEVE
- * (não forçamos tela aqui para não conflitar com index.html)
+ * INICIALIZAÇÃO
  ***********************/
 document.addEventListener('DOMContentLoaded', () => {
   atualizarSelectsMateriais();
-  // Se a página caiu direto em alguma rota, opcionalmente podemos garantir que dashboard existe:
-  // if (document.getElementById('dashboard')) mostrarTela('dashboard');
+  // quem define a tela inicial é o index.html (dashboard),
+  // mas se quiser garantir aqui também, descomente:
+  // mostrarTela('dashboard');
 });

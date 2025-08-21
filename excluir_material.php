@@ -1,28 +1,41 @@
 <?php
 include 'conexao.php';
 
-$id = intval($_POST['id'] ?? 0);
+$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 if ($id <= 0) {
-    die("ID inválido.");
+  http_response_code(400);
+  exit('ID inválido.');
 }
 
-// Verifica se há quantidade em estoque para o material:
-$temEstoque = $conn->query("SELECT quantidade FROM estoque WHERE material_id = $id");
-if ($temEstoque && $temEstoque->num_rows > 0) {
-    $row = $temEstoque->fetch_assoc();
-    if (intval($row['quantidade']) > 0) {
-        die("Não é possível excluir: o material possui quantidade em estoque.");
-    }
-}
+// Se houver FK, deletar estoque primeiro
+$conn->begin_transaction();
 
-// Exclui do estoque (linha “vazia”, normalmente quantidade 0)
-$conn->query("DELETE FROM estoque WHERE material_id = $id");
+try {
+  // apaga do estoque
+  $del1 = $conn->prepare("DELETE FROM estoque WHERE material_id = ?");
+  $del1->bind_param("i", $id);
+  $del1->execute();
+  $del1->close();
 
-// Exclui o material
-if ($conn->query("DELETE FROM materiais WHERE id = $id")) {
-    echo "Material excluído com sucesso!";
-} else {
-    echo "Erro ao excluir material: " . $conn->error;
+  // apaga o material
+  $del2 = $conn->prepare("DELETE FROM materiais WHERE id = ?");
+  $del2->bind_param("i", $id);
+  $del2->execute();
+  $linhas = $del2->affected_rows;
+  $del2->close();
+
+  if ($linhas <= 0) {
+    $conn->rollback();
+    http_response_code(404);
+    exit('Material não encontrado.');
+  }
+
+  $conn->commit();
+  echo "Material excluído com sucesso!";
+} catch (Exception $e) {
+  $conn->rollback();
+  http_response_code(500);
+  echo "Erro ao excluir material: " . $e->getMessage();
 }
 
 $conn->close();
