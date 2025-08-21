@@ -4,109 +4,327 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Controle de Estoque</title>
-  
+
+  <!-- Bloqueio de acesso direto se não estiver logado -->
   <script>
-    // Bloqueia acesso direto se não estiver logado
     if (!sessionStorage.getItem("logado")) {
       window.location.href = "login.html";
     }
   </script>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=11" />
   <link rel="icon" href="logo.jpeg" type="image/jpeg" />
 </head>
 <body>
-  <div class="sidebar">
-    <div>
-      <h2>Menu</h2>
-      <button onclick="mostrarTela('entrada')">Entrada de Material</button>
-      <button onclick="mostrarTela('saida')">Saída de Material</button>
-      <button onclick="mostrarTela('relatorioEstoque')">Relatório de Estoque</button>
-      <button onclick="mostrarTela('relatorioHistorico')">Histórico</button>
-      <button onclick="mostrarTela('materiais')">Gerenciar Materiais</button>
-    </div>
+  <!-- Sidebar -->
+  <div id="sidebar" class="sidebar">
+    <h2>Menu</h2>
 
-    <button onclick="sair()">Sair</button>
+    <!-- Ícones (emojis) -->
+    <button onclick="menuNavigate('dashboard')" aria-label="Início">🏠 Início</button>
+    <button onclick="menuNavigate('entrada')" aria-label="Entrada de Material">➕ Entrada</button>
+    <button onclick="menuNavigate('saida')" aria-label="Saída de Material">➖ Saída</button>
+    <button onclick="menuNavigate('relatorioEstoque')" aria-label="Relatório de Estoque">📦 Estoque</button>
+    <button onclick="menuNavigate('relatorioHistorico')" aria-label="Histórico">📜 Histórico</button>
+    <button onclick="menuNavigate('materiais')" aria-label="Gerenciar Materiais">🛠️ Materiais</button>
+
+    <hr class="menu-divisor" />
+    <button class="btn-sair" onclick="sair()" aria-label="Sair">🚪 Sair</button>
   </div>
 
-  <div class="main">
-    <h1>Controle de Estoque AmorSaúde Maringá</h1>
+  <!-- Overlay (apenas mobile) -->
+  <div id="overlay" class="overlay" onclick="fecharSidebarMobile()"></div>
 
+  <!-- Conteúdo -->
+  <div class="main">
+    <!-- Topo -->
+    <div class="topbar">
+      <button class="toggle-sidebar" onclick="toggleSidebar()">☰ Menu</button>
+      <h1 class="titulo-app">Controle de Estoque AmorSaúde Maringá</h1>
+    </div>
+
+    <!-- DASHBOARD (inicial) -->
+    <div id="dashboard" class="container" style="display:none;">
+      <h2>Bem-vindo(a) 👋</h2>
+
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">Materiais cadastrados</div>
+          <div class="card-value" id="cardMateriais">–</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Itens em estoque</div>
+          <div class="card-value" id="cardEstoque">–</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Entradas (mês)</div>
+          <div class="card-value" id="cardEntradasMes">–</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Saídas (mês)</div>
+          <div class="card-value" id="cardSaidasMes">–</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button onclick="menuNavigate('entrada')">➕ Registrar Entrada</button>
+        <button onclick="menuNavigate('saida')">➖ Registrar Saída</button>
+        <button onclick="menuNavigate('relatorioEstoque')">📦 Relatório de Estoque</button>
+        <button onclick="menuNavigate('relatorioHistorico')">🕑 Histórico</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3>⚠️ Estoque baixo (≤ 5)</h3>
+          <div class="table-responsive">
+            <table id="tabelaBaixoEstoque">
+              <tr><th>Material</th><th>Qtd</th></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>🕑 Últimas movimentações</h3>
+          <div class="table-responsive">
+            <table id="tabelaUltimasMov">
+              <tr><th>Tipo</th><th>Material</th><th>Data</th><th>Qtd</th></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENTRADA -->
     <div id="entrada" class="container" style="display:none;">
       <h2>Entrada de Material</h2>
       <label>Material:</label>
       <select id="materialEntrada"></select>
+
       <label>Data de Chegada:</label>
       <input type="date" id="dataEntrada" />
+
       <label>Quantidade:</label>
-      <input type="number" id="quantidadeEntrada" />
+      <input type="number" id="quantidadeEntrada" inputmode="numeric" />
+
       <label>Tipo:</label>
       <select id="tipoEntrada">
         <option value="unidade">Unidade</option>
         <option value="pacote">Pacote</option>
         <option value="caixa">Caixa</option>
       </select>
+
       <button onclick="registrarEntrada()">Registrar Entrada</button>
     </div>
 
+    <!-- SAÍDA -->
     <div id="saida" class="container" style="display:none;">
       <h2>Saída de Material</h2>
       <label>Material:</label>
       <select id="materialSaida"></select>
+
       <label>Data de Saída:</label>
       <input type="date" id="dataSaida" />
+
       <label>Quantidade:</label>
-      <input type="number" id="quantidadeSaida" />
+      <input type="number" id="quantidadeSaida" inputmode="numeric" />
+
       <label>Responsável:</label>
       <input type="text" id="responsavelSaida" />
+
       <button onclick="registrarSaida()">Registrar Saída</button>
     </div>
 
+    <!-- RELATÓRIO DE ESTOQUE (por categoria) -->
     <div id="relatorioEstoque" class="container" style="display:none;">
-      <h2>Relatório de Estoque</h2>
+      <h2>Relatório de Estoque por Categoria</h2>
 
+      <!-- Botões de categoria com ícones -->
       <div class="categorias-container">
-        <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL MÉDICO')">Material Médico</button>
-        <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL GRÁFICO')">Material Gráfico</button>
-        <button class="btn-categoria" onclick="abrirRelatorio('MEDICAÇÕES')">Medicações</button>
+        <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL MÉDICO')" aria-label="Material Médico">🩺 Material Médico</button>
+        <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL GRÁFICO')" aria-label="Material Gráfico">🖨️ Material Gráfico</button>
+        <button class="btn-categoria" onclick="abrirRelatorio('MEDICAÇÕES')" aria-label="Medicações">💊 Medicações</button>
       </div>
-
       <p class="hint">Clique em uma categoria para abrir o relatório detalhado em outra página.</p>
+
+      <!-- (opcional) tabela geral oculta -->
+      <div class="table-responsive" style="display:none;">
+        <table id="tabelaEstoque">
+          <tr><th>Material</th><th>Quantidade</th></tr>
+        </table>
+      </div>
     </div>
 
+    <!-- HISTÓRICO -->
     <div id="relatorioHistorico" class="container" style="display:none;">
       <h2>Histórico de Movimentações</h2>
-      <table id="tabelaHistorico">
-        <tr><th>Tipo</th><th>Material</th><th>Data</th><th>Quantidade</th><th>Detalhes</th></tr>
-      </table>
+
+      <!-- Exportações com ícones -->
+      <div class="actions export-buttons" style="margin-bottom:10px;">
+        <button class="btn-excel" onclick="exportarHistoricoExcel()">📥 Excel</button>
+        <button class="btn-pdf" onclick="exportarHistoricoPDF()">🧾 PDF</button>
+      </div>
+
+      <div class="table-responsive">
+        <table id="tabelaHistorico">
+          <tr><th>Tipo</th><th>Material</th><th>Data</th><th>Quantidade</th><th>Detalhes</th></tr>
+        </table>
+      </div>
     </div>
 
+    <!-- GERENCIAR MATERIAIS -->
     <div id="materiais" class="container" style="display:none;">
       <h2>Gerenciar Materiais</h2>
+
+      <!-- Exportações com ícones -->
+      <div class="actions export-buttons" style="margin-bottom:10px;">
+        <button class="btn-excel" onclick="exportarMateriaisExcel()">📥 Excel</button>
+        <button class="btn-pdf" onclick="exportarMateriaisPDF()">🧾 PDF</button>
+      </div>
+
       <label>Nome do Material:</label>
       <input type="text" id="novoMaterial" />
+
       <label>Tipo do Material:</label>
       <select id="tipoMaterial">
         <option value="MATERIAL GRÁFICO">MATERIAL GRÁFICO</option>
         <option value="MATERIAL MÉDICO">MATERIAL MÉDICO</option>
         <option value="MEDICAÇÕES">MEDICAÇÕES</option>
       </select>
+
       <button onclick="adicionarMaterial()">Adicionar Material</button>
+
       <div id="listaMateriais" style="margin-top: 20px;"></div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- JS principal do sistema -->
+  <script src="script.js?v=11"></script>
 
+  <!-- JS de layout/menu + exportações -->
   <script>
+    /* ====== MENU OPTATIVO COM PERSISTÊNCIA ====== */
+    function isMobileView() {
+      return window.matchMedia('(max-width: 900px)').matches;
+    }
+
+    function applySidebarState(fromStorage=false) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      const open = localStorage.getItem('sidebarOpen') === 'true';
+      sidebar.classList.toggle('open', open);
+      if (isMobileView()) {
+        overlay.classList.toggle('show', open);
+      } else {
+        overlay.classList.remove('show');
+      }
+      if (!fromStorage) {
+        localStorage.setItem('sidebarOpen', open ? 'true' : 'false');
+      }
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      const willOpen = !sidebar.classList.contains('open');
+      sidebar.classList.toggle('open', willOpen);
+      localStorage.setItem('sidebarOpen', willOpen ? 'true' : 'false');
+      if (isMobileView()) overlay.classList.toggle('show', willOpen);
+      else overlay.classList.remove('show');
+    }
+
+    function fecharSidebarMobile() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      localStorage.setItem('sidebarOpen', 'false');
+    }
+
+    function menuNavigate(tela) {
+      if (typeof mostrarTela === 'function') {
+        mostrarTela(tela);
+      }
+      // No mobile, fecha após navegar; no PC mantém o estado
+      if (isMobileView()) {
+        fecharSidebarMobile();
+      }
+    }
+
+    function abrirRelatorio(tipo) {
+      window.location.href = 'relatorio_categoria.html?tipo=' + encodeURIComponent(tipo);
+    }
+
     function sair() {
       sessionStorage.removeItem("logado");
       window.location.href = "login.html";
     }
-    // nova função: abre a página de relatório por categoria
-    function abrirRelatorio(tipo) {
-      const url = 'relatorio_categoria.html?tipo=' + encodeURIComponent(tipo);
-      window.location.href = url;
+
+    // Estado inicial da sidebar + tela padrão (dashboard)
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('sidebarOpen') === null) {
+        localStorage.setItem('sidebarOpen', 'false'); // sempre começa fechada
+      }
+      applySidebarState(true);
+
+      if (typeof mostrarTela === 'function') {
+        mostrarTela('dashboard');
+      }
+      if (typeof atualizarDashboard === 'function') {
+        atualizarDashboard();
+      }
+    });
+
+    // Ajusta overlay ao mudar de tamanho (PC <-> mobile)
+    window.addEventListener('resize', () => applySidebarState(true));
+
+    /* ====== EXPORTAÇÕES (Histórico e Materiais) ====== */
+    // Excel (CSV via PHP)
+    function exportarHistoricoExcel() {
+      window.location.href = 'exportar_historico_excel.php';
+    }
+    function exportarMateriaisExcel() {
+      window.location.href = 'exportar_materiais_excel.php';
+    }
+
+    // PDF (impressão da tabela isolada)
+    function exportarHistoricoPDF() {
+      const tabela = document.getElementById('tabelaHistorico');
+      imprimirTabelaComoPDF(tabela, 'Histórico de Movimentações');
+    }
+    function exportarMateriaisPDF() {
+      const tabela = document.querySelector('#listaMateriais table');
+      if (!tabela) { alert('A lista de materiais ainda não foi carregada.'); return; }
+      imprimirTabelaComoPDF(tabela, 'Gerenciar Materiais');
+    }
+
+    function imprimirTabelaComoPDF(tabelaEl, titulo) {
+      if (!tabelaEl) return;
+      const html = `
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${titulo}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { margin: 0 0 12px 0; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #999; padding: 8px; text-align: center; }
+            th { background: #eee; }
+          </style>
+        </head>
+        <body>
+          <h2>${titulo}</h2>
+          ${tabelaEl.outerHTML}
+        </body>
+        </html>
+      `;
+      const win = window.open('', '_blank');
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      win.print();
+      // win.close(); // se quiser fechar automaticamente após imprimir
     }
   </script>
 </body>

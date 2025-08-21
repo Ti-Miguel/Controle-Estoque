@@ -1,10 +1,12 @@
+/* ===== Base ===== */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
-  display: flex;
+  display: flex; /* layout com sidebar + conteúdo */
 }
 
+/* ===== Sidebar (optativa em TODAS as telas) ===== */
 .sidebar {
   width: 250px;
   background-color: #64c2d1;
@@ -17,41 +19,112 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  z-index: 1000;
+  transform: translateX(-100%);       /* sempre começa FECHADA */
+  transition: transform 0.3s ease-in-out;
 }
+.sidebar.open { transform: translateX(0); }
 
 .sidebar h2 {
-  margin-top: 0;
+  margin: 0 0 12px 0;
   text-align: center;
 }
 
+/* Botões do menu (com ícones via emoji) */
 .sidebar button {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;                 /* espaço ícone-texto */
   padding: 10px;
-  margin: 10px 0;
+  margin: 6px 0;
   background-color: #ffffff;
-  color: #64c2d1;
+  color: #0b5d75;
   border: none;
-  border-radius: 4px;
-  font-weight: bold;
+  border-radius: 6px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.25s, color 0.25s, transform 0.06s;
+  font-size: 15px;
 }
-
 .sidebar button:hover {
   background-color: #d83c38;
   color: white;
+  transform: translateY(-1px);
 }
 
+/* Botão Início (primeiro) com destaque e hover correto */
+.sidebar button:first-of-type {
+  background-color: #0b5d75; /* azul escuro */
+  color: #fff;
+  font-weight: bold;
+}
+.sidebar button:first-of-type:hover {
+  background-color: #097a96; /* azul médio no hover */
+  color: #fff;
+}
+
+/* Botão Sair destacado */
+.menu-divisor {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.35);
+  margin: 10px 0 6px 0;
+}
+.btn-sair {
+  background: #d83c38 !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  padding: 12px !important;
+  border-radius: 8px !important;
+  font-size: 16px !important;
+  margin-top: 16px !important;
+}
+.btn-sair:hover { filter: brightness(0.95); }
+
+/* Overlay (somente mobile/tablet) */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: none;
+  z-index: 900;
+  transition: opacity .2s ease;
+}
+.overlay.show { display: block; }
+
+/* ===== Topbar (PC e Mobile) ===== */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.titulo-app {
+  color: #d83c38;
+  margin: 0;
+  text-align: center;
+  flex: 1;
+}
+.toggle-sidebar {
+  padding: 10px 14px;
+  background: #64c2d1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toggle-sidebar:hover { background: #d83c38; }
+
+/* ===== Conteúdo ===== */
 .main {
-  margin-left: 270px;
   padding: 20px;
   flex-grow: 1;
-}
-
-h1 {
-  color: #d83c38;
-  text-align: center;
+  margin-left: 0;                 /* recua só quando a sidebar estiver aberta (desktop) */
+  transition: margin-left 0.3s ease-in-out;
 }
 
 .container {
@@ -62,92 +135,76 @@ h1 {
   margin-bottom: 30px;
 }
 
-label {
-  display: block;
-  margin-top: 10px;
-  color: #333;
-}
+label { display: block; margin-top: 10px; color: #333; }
 
 input, select {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   margin-top: 5px;
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid #ccc;
   box-sizing: border-box;
 }
 
 button {
   margin-top: 15px;
-  padding: 10px 15px;
+  padding: 12px 16px;
   background-color: #64c2d1;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
 }
+button:hover { background-color: #d83c38; }
 
-button:hover {
-  background-color: #d83c38;
-}
+/* ===== Tabelas ===== */
+.table-responsive { width: 100%; overflow-x: auto; }
 
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
+  min-width: 520px; /* permite scroll horizontal em telas pequenas */
 }
-
 th, td {
   border: 1px solid #ccc;
-  padding: 8px;
+  padding: 10px;
   text-align: center;
 }
+th { background-color: #64c2d1; color: white; }
 
-th {
-  background-color: #64c2d1;
-  color: white;
-}
+/* Histórico colorido */
+#tabelaHistorico .linha-entrada { background-color: #d4edda; } /* verde claro */
+#tabelaHistorico .linha-saida   { background-color: #f8d7da; } /* vermelho claro */
 
-/* ===== Gerenciar Materiais (tabela com ações) ===== */
+/* ===== Gerenciar Materiais ===== */
 #listaMateriais .tabela-materiais {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  min-width: 620px; /* scroll quando necessário */
 }
-
 #listaMateriais .tabela-materiais th,
 #listaMateriais .tabela-materiais td {
   border: 1px solid #ccc;
   padding: 10px;
   text-align: left;
 }
-
 #listaMateriais .tabela-materiais th {
   background-color: #64c2d1;
   color: #fff;
 }
-
-/* Destaque: nome maior que tipo */
 #listaMateriais .nome-material {
   font-size: 18px;
   font-weight: 700;
   color: #333;
 }
-
 #listaMateriais .tipo-material {
   font-size: 14px;
   color: #666;
 }
-
-/* Inputs de edição */
-#listaMateriais .input-editar {
-  width: 100%;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-/* Botões de ação no gerenciador */
+#listaMateriais .input-editar { width: 100%; padding: 8px; }
 #listaMateriais .btn-acao {
   padding: 8px 10px;
   margin-right: 6px;
@@ -156,62 +213,18 @@ th {
   cursor: pointer;
   font-weight: 600;
 }
-
 #listaMateriais .btn-editar { background: #64c2d1; color: #fff; }
 #listaMateriais .btn-excluir { background: #d83c38; color: #fff; }
 #listaMateriais .btn-salvar { background: #2e7d32; color: #fff; }
 #listaMateriais .btn-cancelar { background: #9e9e9e; color: #fff; }
 
-/* ===== Lista Materiais (se usar lista simples em outro momento) ===== */
-#listaMateriais table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-}
-
-#listaMateriais th, #listaMateriais td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
-}
-
-#listaMateriais th {
-  background-color: #64c2d1;
-  color: white;
-}
-
-
-/* Linhas coloridas no histórico */
-#tabelaHistorico .linha-entrada {
-  background-color: #d4edda; /* verde claro */
-}
-
-#tabelaHistorico .linha-saida {
-  background-color: #f8d7da; /* vermelho claro */
-}
-
-/* Agrupamento por categoria no Relatório de Estoque */
-#tabelaEstoque .grupo-cabecalho td {
-  background: #eaf6ff;     /* azul bem claro */
-  color: #0b5d75;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-}
-
-#tabelaEstoque .grupo-subtotal td {
-  background: #f4f9fb;
-  font-weight: 700;
-}
-
-/* Botões de categoria no Relatório de Estoque */
+/* ===== Botões de Categoria (relatório por categoria) ===== */
 .categorias-container {
   display: grid;
   grid-template-columns: repeat(3, minmax(180px, 1fr));
   gap: 12px;
   margin: 10px 0 6px 0;
 }
-
 .btn-categoria {
   padding: 12px 16px;
   background: #ffffff;
@@ -222,18 +235,118 @@ th {
   font-weight: 700;
   transition: transform .06s ease, background .2s ease, color .2s ease;
 }
-
 .btn-categoria:hover {
   background: #64c2d1;
   color: #fff;
   transform: translateY(-1px);
 }
+.hint { color: #555; margin-top: 4px; }
 
-.hint {
-  color: #555;
-  margin-top: 4px;
+/* ===== Dashboard ===== */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 12px 0 16px 0;
+}
+.card {
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+}
+.card-title {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+.card-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0b5d75;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 18px 0;
+}
+.actions button {
+  background: #ffffff;
+  color: #0b5d75;
+  border: 2px solid #64c2d1;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.actions button:hover {
+  background: #64c2d1;
+  color: #fff;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.panel {
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+}
+.panel h3 {
+  margin: 4px 0 8px 0;
+  color: #333;
+  font-size: 18px;
 }
 
-/* (já existentes do histórico, se ainda não adicionou) */
-#tabelaHistorico .linha-entrada { background-color: #d4edda; }
-#tabelaHistorico .linha-saida   { background-color: #f8d7da; }
+/* ===== Impressão (PDF via print) – opcional ===== */
+@media print {
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; }
+  th { background: #eee !important; color: #000 !important; }
+  .sidebar, .overlay, .categorias-container, .hint, .toggle-sidebar { display: none !important; }
+  body { background: #fff !important; }
+}
+
+/* ===== Breakpoints ===== */
+
+/* Desktop/laptop: sem overlay; conteúdo recua quando menu está aberto */
+@media (min-width: 901px) {
+  .overlay { display: none !important; }
+  .sidebar.open ~ .main { margin-left: 270px; }
+}
+
+/* Tablets e celulares */
+@media (max-width: 900px) {
+  .main { margin-left: 0; }
+  .titulo-app { font-size: 18px; }
+  input, select, button { font-size: 16px; } /* evita zoom automático no iOS */
+}
+
+/* Telefones médios/pequenos */
+@media (max-width: 768px) {
+  .container { padding: 16px; }
+  table { min-width: 480px; }
+  .cards { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* Telefones pequenos */
+@media (max-width: 520px) {
+  .card-value { font-size: 24px; }
+  .categorias-container { grid-template-columns: 1fr; }
+}
+
+/* Botões de categoria com ícone + texto */
+.btn-categoria {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;           /* espaço entre ícone e texto */
+  font-size: 15px;
+  line-height: 1;
+}

@@ -3,115 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Relatório por Categoria</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Relatório de Estoque por Categoria</title>
+
+  <link rel="stylesheet" href="style.css?v=12" />
   <link rel="icon" href="logo.jpeg" type="image/jpeg" />
-  <style>
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
+
+  <script>
+    // Bloqueia acesso direto se não estiver logado
+    if (!sessionStorage.getItem("logado")) {
+      window.location.href = "login.html";
     }
-    .acoes {
-      display: flex;
-      gap: 8px;
-    }
-    .btn {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      background: #64c2d1;
-      color: #fff;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .btn:hover { background: #d83c38; }
-    @media print {
-      .topbar .btn,
-      .topbar .acoes { display: none !important; }
-      body { background: #fff !important; }
-    }
-  </style>
+  </script>
 </head>
-<body style="display:block; background:#f4f4f4;">
-  <div class="main" style="margin:20px auto; max-width: 1000px;">
+<body style="display:block;">
+  <div class="main" style="margin:0; padding: 16px;">
+    <div class="topbar" style="margin-bottom: 8px;">
+      <a href="index.html" class="toggle-sidebar" style="text-decoration:none; display:inline-block;">← Voltar</a>
+      <h1 class="titulo-app" style="margin-left:12px;">Relatório de Estoque por Categoria</h1>
+    </div>
+
     <div class="container">
-      <div class="topbar">
-        <h2 id="tituloCategoria">Relatório</h2>
-        <div class="acoes">
-          <button class="btn" onclick="voltar()">← Voltar</button>
-          <button class="btn" id="btnExcel">Exportar Excel</button>
-          <button class="btn" id="btnPDF">Exportar PDF</button>
-        </div>
+      <h2 id="tituloCategoria">Categoria</h2>
+
+      <!-- Botões de exportação -->
+      <div class="actions export-buttons" style="margin: 8px 0 14px 0;">
+        <button class="btn-excel" id="btnExcel">📥 Excel</button>
+        <button class="btn-pdf" id="btnPDF">🧾 PDF</button>
       </div>
-      <table id="tabelaCategoria">
-        <tr><th>Material</th><th>Quantidade</th></tr>
-      </table>
+
+      <div class="table-responsive">
+        <table id="tabelaCategoria">
+          <tr><th>Material</th><th>Quantidade</th></tr>
+        </table>
+      </div>
     </div>
   </div>
 
   <script>
-    function getParam(name) {
+    // Util: pegar ?tipo=...
+    function getTipoFromURL() {
       const params = new URLSearchParams(window.location.search);
-      return params.get(name) || '';
-    }
-    function voltar() {
-      window.location.href = 'index.html';
+      return params.get('tipo') || '';
     }
 
-    function carregarRelatorio() {
-      const tipo = getParam('tipo');
-      document.getElementById('tituloCategoria').textContent = `Relatório – ${tipo || 'Categoria'}`;
-
+    // Carrega dados da categoria via PHP
+    function carregarTabelaCategoria(tipo) {
       const tabela = document.getElementById('tabelaCategoria');
+      // limpa linhas antigas (exceto header)
       tabela.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
 
       fetch('listar_estoque_por_tipo.php?tipo=' + encodeURIComponent(tipo))
-        .then(res => res.json())
+        .then(r => r.json())
         .then(dados => {
           if (!dados || dados.length === 0) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
             td.colSpan = 2;
-            td.textContent = 'Nenhum material encontrado para esta categoria.';
+            td.textContent = 'Nenhum item encontrado para esta categoria.';
             tr.appendChild(td);
             tabela.appendChild(tr);
-          } else {
-            dados.forEach(item => {
-              const tr = document.createElement('tr');
-              const tdNome = document.createElement('td');
-              const tdQtd = document.createElement('td');
-              tdNome.textContent = item.nome;
-              tdQtd.textContent = item.quantidade;
-              tr.appendChild(tdNome);
-              tr.appendChild(tdQtd);
-              tabela.appendChild(tr);
-            });
+            return;
           }
+          dados.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${item.nome}</td><td>${item.quantidade}</td>`;
+            tabela.appendChild(tr);
+          });
         })
         .catch(() => {
           const tr = document.createElement('tr');
           const td = document.createElement('td');
           td.colSpan = 2;
-          td.textContent = 'Erro ao carregar o relatório.';
+          td.textContent = 'Erro ao carregar a tabela.';
           tr.appendChild(td);
           tabela.appendChild(tr);
         });
-
-      // Configurar botões
-      document.getElementById('btnExcel').onclick = () => {
-        window.location.href = 'exportar_estoque_excel.php?tipo=' + encodeURIComponent(tipo);
-      };
-      document.getElementById('btnPDF').onclick = () => {
-        // usa a impressão do navegador; selecione "Salvar como PDF"
-        window.print();
-      };
     }
 
-    document.addEventListener('DOMContentLoaded', carregarRelatorio);
+    // Exportações
+    function exportarCategoriaExcel(tipo) {
+      // usa PHP para gerar CSV (compatível com Excel)
+      window.location.href = 'exportar_categoria_excel.php?tipo=' + encodeURIComponent(tipo);
+    }
+
+    function exportarCategoriaPDF(titulo) {
+      const tabela = document.getElementById('tabelaCategoria');
+      if (!tabela) return;
+      const html = `
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${titulo}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { margin: 0 0 12px 0; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #999; padding: 8px; text-align: center; }
+            th { background: #eee; }
+          </style>
+        </head>
+        <body>
+          <h2>${titulo}</h2>
+          ${tabela.outerHTML}
+        </body>
+        </html>
+      `;
+      const win = window.open('', '_blank');
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      win.print();
+      // win.close();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipo = getTipoFromURL();
+      const titulo = document.getElementById('tituloCategoria');
+      titulo.textContent = tipo ? `Categoria: ${tipo}` : 'Categoria';
+
+      carregarTabelaCategoria(tipo);
+
+      document.getElementById('btnExcel').addEventListener('click', () => exportarCategoriaExcel(tipo));
+      document.getElementById('btnPDF').addEventListener('click', () => exportarCategoriaPDF(`Relatório de Estoque - ${tipo}`));
+    });
   </script>
 </body>
 </html>
