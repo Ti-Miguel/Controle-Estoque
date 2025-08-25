@@ -172,7 +172,13 @@ function entrarModoEdicao(tr, material) {
 
   const selectTipo = document.createElement('select');
   selectTipo.className = 'input-editar';
-  ['MATERIAL GRÁFICO', 'MATERIAL MÉDICO', 'MEDICAÇÕES'].forEach(op => {
+  [
+    'MATERIAL GRÁFICO',
+    'MATERIAL MÉDICO',
+    'MEDICAÇÕES',
+    'DISPOSITIVOS',            // NOVO
+    'MATERIAL DE ESCRITÓRIO'   // NOVO
+  ].forEach(op => {
     const o = document.createElement('option');
     o.value = op;
     o.textContent = op;

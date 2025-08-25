@@ -12,7 +12,8 @@
     }
   </script>
 
-  <link rel="stylesheet" href="style.css?v=11" />
+  <!-- bump de versão para limpar cache -->
+  <link rel="stylesheet" href="style.css?v=12" />
   <link rel="icon" href="logo.jpeg" type="image/jpeg" />
 </head>
 <body>
@@ -143,6 +144,9 @@
         <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL MÉDICO')" aria-label="Material Médico">🩺 Material Médico</button>
         <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL GRÁFICO')" aria-label="Material Gráfico">🖨️ Material Gráfico</button>
         <button class="btn-categoria" onclick="abrirRelatorio('MEDICAÇÕES')" aria-label="Medicações">💊 Medicações</button>
+        <!-- NOVOS -->
+        <button class="btn-categoria" onclick="abrirRelatorio('DISPOSITIVOS')" aria-label="Dispositivos">🧷 Dispositivos</button>
+        <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL DE ESCRITÓRIO')" aria-label="Material de Escritório">📒 Material de Escritório</button>
       </div>
       <p class="hint">Clique em uma categoria para abrir o relatório detalhado em outra página.</p>
 
@@ -189,6 +193,9 @@
         <option value="MATERIAL GRÁFICO">MATERIAL GRÁFICO</option>
         <option value="MATERIAL MÉDICO">MATERIAL MÉDICO</option>
         <option value="MEDICAÇÕES">MEDICAÇÕES</option>
+        <!-- NOVOS -->
+        <option value="DISPOSITIVOS">DISPOSITIVOS</option>
+        <option value="MATERIAL DE ESCRITÓRIO">MATERIAL DE ESCRITÓRIO</option>
       </select>
 
       <button onclick="adicionarMaterial()">Adicionar Material</button>
@@ -198,7 +205,7 @@
   </div>
 
   <!-- JS principal do sistema -->
-  <script src="script.js?v=11"></script>
+  <script src="script.js?v=12"></script>
 
   <!-- JS de layout/menu + exportações -->
   <script>
