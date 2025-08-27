@@ -6,16 +6,17 @@
   <title>Controle de Estoque</title>
 
   <!-- Bloqueio de acesso direto se não estiver logado -->
-  <script>
-    if (!sessionStorage.getItem("logado")) {
-      window.location.href = "login.html";
-    }
-  </script>
+ <script>
+  if (!sessionStorage.getItem('estoque_logado')) {
+    window.location.href = 'login_estoque.html';
+  }
+</script>
 
   <!-- bump de versão para limpar cache -->
   <link rel="stylesheet" href="style.css?v=12" />
   <link rel="icon" href="logo.jpeg" type="image/jpeg" />
 </head>
+
 <body>
   <!-- Sidebar -->
   <div id="sidebar" class="sidebar">
@@ -39,10 +40,13 @@
   <!-- Conteúdo -->
   <div class="main">
     <!-- Topo -->
-    <div class="topbar">
+        <div class="topbar">
       <button class="toggle-sidebar" onclick="toggleSidebar()">☰ Menu</button>
       <h1 class="titulo-app">Controle de Estoque AmorSaúde Maringá</h1>
+      <!-- NOVO: botão para o hub -->
+      <button class="btn-hub" onclick="window.location.href='/hub.html'">↪ Hub de Sistemas</button>
     </div>
+
 
     <!-- DASHBOARD (inicial) -->
     <div id="dashboard" class="container" style="display:none;">

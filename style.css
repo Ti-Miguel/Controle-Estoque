@@ -350,3 +350,20 @@ th { background-color: #64c2d1; color: white; }
   font-size: 15px;
   line-height: 1;
 }
+
+/* Botão Hub de Sistemas (topbar) */
+.btn-hub {
+  padding: 10px 14px;
+  background: #0b5d75;   /* azul escuro para diferenciar do toggle */
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-hub:hover { background: #097a96; }
+
+@media (max-width: 520px) {
+  .btn-hub { font-size: 14px; padding: 8px 10px; }
+}
