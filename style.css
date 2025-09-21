@@ -137,7 +137,11 @@ body {
 
 label { display: block; margin-top: 10px; color: #333; }
 
-input, select {
+input, select, textarea, button {
+  font-family: inherit;
+}
+
+input, select, textarea {
   width: 100%;
   padding: 10px;
   margin-top: 5px;
@@ -234,6 +238,12 @@ th { background-color: #64c2d1; color: white; }
   cursor: pointer;
   font-weight: 700;
   transition: transform .06s ease, background .2s ease, color .2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;           /* espaço entre ícone e texto */
+  font-size: 15px;
+  line-height: 1;
 }
 .btn-categoria:hover {
   background: #64c2d1;
@@ -341,16 +351,6 @@ th { background-color: #64c2d1; color: white; }
   .categorias-container { grid-template-columns: 1fr; }
 }
 
-/* Botões de categoria com ícone + texto */
-.btn-categoria {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;           /* espaço entre ícone e texto */
-  font-size: 15px;
-  line-height: 1;
-}
-
 /* Botão Hub de Sistemas (topbar) */
 .btn-hub {
   padding: 10px 14px;
@@ -363,7 +363,236 @@ th { background-color: #64c2d1; color: white; }
   white-space: nowrap;
 }
 .btn-hub:hover { background: #097a96; }
-
 @media (max-width: 520px) {
   .btn-hub { font-size: 14px; padding: 8px 10px; }
 }
+
+/* =========================================================
+   ==========  SEÇÃO ESPECÍFICA: SOLICITAÇÕES  =============
+   ========================================================= */
+
+/* Centraliza o container da aba e limita largura */
+#solicitacoes {
+  max-width: 1200px;
+  margin: 0 auto;     /* centralizado na página */
+}
+
+/* Grid: formulário menor (35%), lista maior (65%) */
+#solicitacoes .grid-solic {
+  display: grid;
+  grid-template-columns: 0.35fr 0.65fr;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* Garante que inputs/controles ocupem bem o painel */
+#solicitacoes .panel input,
+#solicitacoes .panel select,
+#solicitacoes .panel textarea,
+#solicitacoes .panel button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Evita que a tabela estoure o layout da página */
+#solicitacoes .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Tabela de Solicitações (override das regras gerais) */
+#tabelaSolicitacoes {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;   /* deixa o navegador distribuir melhor as colunas */
+  min-width: 700px;     /* largura mínima da tabela */
+}
+#tabelaSolicitacoes th,
+#tabelaSolicitacoes td {
+  text-align: left;     /* leitura mais natural */
+  white-space: nowrap;  /* evita texto “em pé” quebrando letra a letra */
+  padding: 8px 10px;
+}
+
+/* Larguras sugeridas (opcional; ajuste fino se quiser) */
+#tabelaSolicitacoes th:nth-child(1),
+#tabelaSolicitacoes td:nth-child(1) { width: 72px; }     /* ID */
+#tabelaSolicitacoes th:nth-child(2),
+#tabelaSolicitacoes td:nth-child(2) { width: 26%; }      /* Material */
+#tabelaSolicitacoes th:nth-child(3),
+#tabelaSolicitacoes td:nth-child(3) { width: 18%; }      /* Categoria */
+#tabelaSolicitacoes th:nth-child(4),
+#tabelaSolicitacoes td:nth-child(4) { width: 24%; }      /* Motivo */
+#tabelaSolicitacoes th:nth-child(5),
+#tabelaSolicitacoes td:nth-child(5) { width: 180px; }    /* Status (select) */
+#tabelaSolicitacoes th:nth-child(6),
+#tabelaSolicitacoes td:nth-child(6) { width: 140px; }    /* Prazo */
+#tabelaSolicitacoes th:nth-child(7),
+#tabelaSolicitacoes td:nth-child(7) { width: 160px; }    /* Atualizado */
+#tabelaSolicitacoes th:nth-child(8),
+#tabelaSolicitacoes td:nth-child(8) { width: 120px; }    /* Ações */
+
+/* Select e input dentro da tabela não “estouram” a célula */
+#tabelaSolicitacoes select,
+#tabelaSolicitacoes input[type="date"] {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Badges de status */
+.badge { 
+  display:inline-block; 
+  padding:4px 8px; 
+  border-radius: 10px; 
+  font-size:12px; 
+  font-weight:700; 
+}
+.badge.s1 { background:#fff3cd; color:#856404; }   /* PEDIDO SOLICITADO */
+.badge.s2 { background:#cce5ff; color:#004085; }   /* SOLICITADO AO FORNECEDOR */
+.badge.s3 { background:#d4edda; color:#155724; }   /* CHEGOU */
+
+/* Responsivo: em telas menores vira 1 coluna */
+@media (max-width: 1024px) {
+  #solicitacoes .grid-solic { grid-template-columns: 1fr; }
+}
+
+/* Em telas muito pequenas, permitir min-width menor */
+@media (max-width: 520px) {
+  #tabelaSolicitacoes { min-width: 640px; }
+}
+
+/* ===== Centralização FOCADA na aba Solicitações (modo flex) ===== */
+body.solic-centered .main{
+  width:100%;
+  display:flex;               /* centraliza o filho */
+  justify-content:center;     /* centro horizontal */
+}
+
+body.solic-centered #solicitacoes{
+  flex: 1 1 auto;             /* pode crescer, mas respeita o max-width */
+  max-width:1200px;           /* limite elegante */
+  width:100%;
+  margin:0 auto;
+}
+
+/* Grid interno: form menor, lista maior */
+body.solic-centered #solicitacoes .grid-solic{
+  display:grid;
+  grid-template-columns: 0.32fr 0.68fr; /* mais espaço pra tabela */
+  gap:20px;
+  align-items:flex-start;
+}
+@media (max-width:1024px){
+  body.solic-centered #solicitacoes .grid-solic{ grid-template-columns:1fr; }
+}
+
+/* Painéis não “empurram” nada */
+body.solic-centered #solicitacoes .panel{ width:100%; }
+
+/* Tabela estável (sem texto em pé) */
+#solicitacoes .table-responsive{ width:100%; overflow-x:auto; }
+#solicitacoes #tabelaSolicitacoes{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:auto;
+  min-width:760px;
+}
+#solicitacoes #tabelaSolicitacoes th,
+#solicitacoes #tabelaSolicitacoes td{
+  padding:8px 10px;
+  text-align:left;
+  white-space:nowrap !important;
+}
+
+/* Larguras (com coluna Qtd) */
+#solicitacoes #tabelaSolicitacoes th:nth-child(1),
+#solicitacoes #tabelaSolicitacoes td:nth-child(1){ width:72px; }   /* ID */
+#solicitacoes #tabelaSolicitacoes th:nth-child(2),
+#solicitacoes #tabelaSolicitacoes td:nth-child(2){ width:24%; }    /* Material */
+#solicitacoes #tabelaSolicitacoes th:nth-child(3),
+#solicitacoes #tabelaSolicitacoes td:nth-child(3){ width:14%; }    /* Categoria */
+#solicitacoes #tabelaSolicitacoes th:nth-child(4),
+#solicitacoes #tabelaSolicitacoes td:nth-child(4){ width:8%; }     /* Qtd */
+#solicitacoes #tabelaSolicitacoes th:nth-child(5),
+#solicitacoes #tabelaSolicitacoes td:nth-child(5){ width:18%; }    /* Motivo */
+#solicitacoes #tabelaSolicitacoes th:nth-child(6),
+#solicitacoes #tabelaSolicitacoes td:nth-child(6){ width:170px; }  /* Status */
+#solicitacoes #tabelaSolicitacoes th:nth-child(7),
+#solicitacoes #tabelaSolicitacoes td:nth-child(7){ width:130px; }  /* Prazo */
+#solicitacoes #tabelaSolicitacoes th:nth-child(8),
+#solicitacoes #tabelaSolicitacoes td:nth-child(8){ width:150px; }  /* Atualizado */
+#solicitacoes #tabelaSolicitacoes th:nth-child(9),
+#solicitacoes #tabelaSolicitacoes td:nth-child(9){ width:120px; }  /* Ações */
+
+#solicitacoes #tabelaSolicitacoes select,
+#solicitacoes #tabelaSolicitacoes input[type="date"]{ width:100%; max-width:100%; }
+
+/* Menu suspenso Ações (usando <details>) */
+.menu-acoes {
+  position: relative;
+  display: inline-block;
+}
+.menu-acoes > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #cfd8dc;
+  background: #fff;
+  font-weight: 700;
+}
+.menu-acoes[open] > summary { background: #eef7fa; }
+
+.menu-acoes .menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+  padding: 6px;
+  z-index: 10;
+}
+.menu-acoes .menu button {
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  background: transparent;
+  color: #0b5d75;
+  border: none;
+  text-align: left;
+  border-radius: 6px;
+}
+.menu-acoes .menu button:hover { background: #eef7fa; }
+
+/* Inputs inline de edição não estourarem a célula */
+#tabelaSolicitacoes input[type="number"],
+#tabelaSolicitacoes input[type="date"],
+#tabelaSolicitacoes textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Solicitações: formulário em cima e lista abaixo */
+#solicitacoes .grid-solic{
+  display:grid !important;
+  grid-template-columns: 1fr !important;  /* força 1 coluna em qualquer tela */
+  gap:16px !important;
+  align-items:flex-start !important;
+}
+
+/* Solicitações SEM grid: sempre um bloco abaixo do outro */
+#solicitacoes .bloc-nova,
+#solicitacoes .bloc-lista{
+  display:block !important;
+  width:100% !important;
+  margin:0 0 16px 0 !important;
+}
+
+/* se existir alguma regra antiga com grid/flex, anulamos aqui */
+#solicitacoes *[class*="grid"]{
+  display:block !important;
+}
+

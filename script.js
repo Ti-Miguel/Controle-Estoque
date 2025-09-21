@@ -1,9 +1,10 @@
 /****************************************************
- * CONTROLE DE ESTOQUE - script.js (ID safe)
- * - Editar/Excluir materiais via ID
- * - Dashboard
- * - Histórico colorido
- * - Relatórios
+ * CONTROLE DE ESTOQUE - script.js (atualizado)
+ * - Navegação (com centralização da aba Solicitações)
+ * - Materiais (CRUD por ID)
+ * - Entradas / Saídas
+ * - Relatórios + Dashboard
+ * - Solicitações (com quantidade, status como texto e menu de ações)
  ****************************************************/
 
 /***********************
@@ -40,14 +41,20 @@ function atualizarSelectsMateriais() {
  * NAVEGAÇÃO ENTRE TELAS
  ***********************/
 function mostrarTela(nomeTela) {
-  // Inclui o dashboard na lista de telas
-  const telas = ['dashboard', 'entrada', 'saida', 'relatorioEstoque', 'relatorioHistorico', 'materiais'];
+  const telas = ['dashboard', 'entrada', 'saida', 'relatorioEstoque', 'relatorioHistorico', 'materiais', 'solicitacoes'];
   telas.forEach(tela => {
     const el = document.getElementById(tela);
     if (el) el.style.display = (tela === nomeTela) ? 'block' : 'none';
   });
 
-  // Carregamento sob demanda
+  // Centralização só na aba Solicitações (combina com o patch <style> no index)
+  const main = document.querySelector('.main');
+  if (main) {
+    if (nomeTela === 'solicitacoes') main.classList.add('solic-flex');
+    else main.classList.remove('solic-flex');
+  }
+
+  // Carregamentos sob demanda
   if (nomeTela === 'relatorioEstoque' && typeof atualizarRelatorioEstoque === 'function') {
     atualizarRelatorioEstoque();
   }
@@ -59,6 +66,9 @@ function mostrarTela(nomeTela) {
   }
   if (nomeTela === 'dashboard' && typeof atualizarDashboard === 'function') {
     atualizarDashboard();
+  }
+  if (nomeTela === 'solicitacoes' && typeof carregarSolicitacoes === 'function') {
+    carregarSolicitacoes();
   }
 }
 
@@ -176,8 +186,8 @@ function entrarModoEdicao(tr, material) {
     'MATERIAL GRÁFICO',
     'MATERIAL MÉDICO',
     'MEDICAÇÕES',
-    'DISPOSITIVOS',            // NOVO
-    'MATERIAL DE ESCRITÓRIO'   // NOVO
+    'DISPOSITIVOS',
+    'MATERIAL DE ESCRITÓRIO'
   ].forEach(op => {
     const o = document.createElement('option');
     o.value = op;
@@ -308,7 +318,6 @@ function atualizarRelatorioEstoque() {
   const tabela = document.getElementById('tabelaEstoque');
   if (!tabela) return;
 
-  // limpa linhas (mantém header)
   tabela.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
 
   fetch('listar_estoque.php')
@@ -337,7 +346,6 @@ function atualizarRelatorioHistorico() {
   const tabela = document.getElementById('tabelaHistorico');
   if (!tabela) return;
 
-  // limpa linhas (mantém header)
   tabela.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
 
   fetch('listar_historico.php')
@@ -345,7 +353,7 @@ function atualizarRelatorioHistorico() {
     .then(historico => {
       if (!historico || historico.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="5">Nenhuma movimentação registrada.</td>`;
+        tr.innerHTML = `<td colspan="5">Nenhuma movimentação registrado.</td>`;
         tabela.appendChild(tr);
         return;
       }
@@ -353,8 +361,8 @@ function atualizarRelatorioHistorico() {
       historico.forEach(reg => {
         const tr = document.createElement('tr');
 
-        if (reg.tipo === 'Entrada') tr.classList.add('linha-entrada'); // verde claro (CSS)
-        else if (reg.tipo === 'Saída') tr.classList.add('linha-saida'); // vermelho claro (CSS)
+        if (reg.tipo === 'Entrada') tr.classList.add('linha-entrada');
+        else if (reg.tipo === 'Saída') tr.classList.add('linha-saida');
 
         ['tipo', 'material', 'data', 'quantidade', 'detalhes'].forEach(campo => {
           const td = document.createElement('td');
@@ -423,12 +431,11 @@ function atualizarDashboard() {
     .then(r => r.json())
     .then(hist => {
       const agora = new Date();
-      const mes = agora.getMonth();   // 0..11
+      const mes = agora.getMonth();
       const ano = agora.getFullYear();
 
       let entradasMes = 0, saidasMes = 0;
 
-      // últimas 5
       const tabelaUlt = document.getElementById('tabelaUltimasMov');
       if (tabelaUlt) {
         tabelaUlt.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
@@ -469,11 +476,449 @@ function atualizarDashboard() {
 }
 
 /***********************
+ * SOLICITAÇÕES
+ ***********************/
+function badgeStatus(s) {
+  if (s === 'PEDIDO SOLICITADO') return `<span class="badge s1">${s}</span>`;
+  if (s === 'SOLICITADO AO FORNECEDOR') return `<span class="badge s2">${s}</span>`;
+  if (s === 'CHEGOU') return `<span class="badge s3">${s}</span>`;
+  return s;
+}
+
+function carregarSolicitacoes() {
+  fetch('listar_solicitacoes.php')
+    .then(r => r.json())
+    .then(lista => {
+      const tbody = document.querySelector('#tabelaSolicitacoes tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!lista || lista.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="9">Nenhuma solicitação cadastrada.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      lista.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = item.id;
+
+        const prazo = item.prazo ? item.prazo : '—';
+        const atualizado = (item.atualizado_em || '').replace('T',' ');
+
+        tr.innerHTML = `
+          <td>#${item.id}</td>
+          <td>${item.nome_material}</td>
+          <td>${item.categoria}</td>
+          <td class="cel-qtd">${item.quantidade}</td>
+          <td class="cel-motivo">${item.motivo || '—'}</td>
+          <td class="cel-status">${badgeStatus(item.status)}</td>
+          <td class="cel-prazo">${prazo}</td>
+          <td>${atualizado}</td>
+          <td class="cel-acoes">
+            <details class="menu-acoes">
+              <summary>⋮ Ações</summary>
+              <div class="menu">
+                <button onclick="entrarEdicaoSolic(${item.id}); this.closest('details').open=false;">Editar</button>
+                <button onclick="abrirAlterarStatus(${item.id}, '${item.status}'); this.closest('details').open=false;">Alterar status</button>
+              </div>
+            </details>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(() => {});
+}
+
+function criarSolicitacao() {
+  const nome = (document.getElementById('sol_nome')?.value || '').trim();
+  const cat  = document.getElementById('sol_categoria')?.value || '';
+  const qtd  = parseInt(document.getElementById('sol_qtd')?.value || '1', 10);
+  const mot  = (document.getElementById('sol_motivo')?.value || '').trim();
+  const prazo = document.getElementById('sol_prazo')?.value || '';
+
+  if (!nome || !cat || !mot) {
+    alert('Preencha Material, Categoria e Motivo.');
+    return;
+  }
+  if (!Number.isFinite(qtd) || qtd <= 0) {
+    alert('Quantidade inválida.');
+    return;
+  }
+
+  const body = new URLSearchParams();
+  body.append('nome_material', nome);
+  body.append('categoria', cat);
+  body.append('quantidade', String(qtd));
+  body.append('motivo', mot);
+  body.append('prazo', prazo);
+
+  fetch('criar_solicitacao.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: body.toString()
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (!j.ok) throw new Error(j.erro || 'Falha ao criar.');
+    alert('Solicitação criada com sucesso!');
+    // limpar form
+    document.getElementById('sol_nome').value = '';
+    document.getElementById('sol_qtd').value = '1';
+    document.getElementById('sol_motivo').value = '';
+    document.getElementById('sol_prazo').value = '';
+    carregarSolicitacoes();
+  })
+  .catch(e => alert(e.message));
+}
+
+// Entra em modo edição: transforma Qtd/Motivo/Prazo em inputs + mostra Salvar/Cancelar
+function entrarEdicaoSolic(id) {
+  const tr = document.querySelector(`#tabelaSolicitacoes tr[data-id="${id}"]`);
+  if (!tr) return;
+
+  const tdQtd = tr.querySelector('.cel-qtd');
+  const tdMotivo = tr.querySelector('.cel-motivo');
+  const tdPrazo = tr.querySelector('.cel-prazo');
+  const tdAcoes = tr.querySelector('.cel-acoes');
+
+  const qtdAtual = (tdQtd.textContent || '1').trim();
+  const motivoAtual = (tdMotivo.textContent || '').trim();
+  const prazoAtual = (tdPrazo.textContent || '').trim();
+  const prazoVal = /^\d{4}-\d{2}-\d{2}$/.test(prazoAtual) ? prazoAtual : '';
+
+  tdQtd.innerHTML = `<input type="number" min="1" step="1" value="${qtdAtual}">`;
+  tdMotivo.innerHTML = `<textarea rows="2">${motivoAtual === '—' ? '' : motivoAtual}</textarea>`;
+  tdPrazo.innerHTML = `<input type="date" value="${prazoVal}">`;
+
+  tdAcoes.innerHTML = `
+    <button class="btn-acao btn-salvar" onclick="salvarEdicaoSolic(${id})">Salvar</button>
+    <button class="btn-acao btn-cancelar" onclick="cancelarEdicaoSolic(${id})">Cancelar</button>
+  `;
+}
+
+function cancelarEdicaoSolic(id) {
+  carregarSolicitacoes(); // volta a linha ao estado normal
+}
+
+function salvarEdicaoSolic(id) {
+  const tr = document.querySelector(`#tabelaSolicitacoes tr[data-id="${id}"]`);
+  if (!tr) return;
+
+  const qtd = parseInt(tr.querySelector('.cel-qtd input')?.value || '1', 10);
+  const motivo = (tr.querySelector('.cel-motivo textarea')?.value || '').trim();
+  const prazo = (tr.querySelector('.cel-prazo input[type="date"]')?.value || '').trim();
+
+  if (!Number.isFinite(qtd) || qtd <= 0) { alert('Quantidade inválida.'); return; }
+
+  const body = new URLSearchParams();
+  body.append('id', String(id));
+  body.append('quantidade', String(qtd));
+  body.append('motivo', motivo);
+  body.append('prazo', prazo);
+
+  fetch('editar_solicitacao.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: body.toString()
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (!j.ok) throw new Error(j.erro || 'Falha ao salvar.');
+    carregarSolicitacoes();
+  })
+  .catch(e => alert(e.message));
+}
+
+// Troca de status (só mostra texto na coluna; alteração via menu)
+function abrirAlterarStatus(id, statusAtual) {
+  const novo = prompt(
+    "Novo status (digite exatamente):\n- PEDIDO SOLICITADO\n- SOLICITADO AO FORNECEDOR\n- CHEGOU",
+    statusAtual
+  );
+  if (!novo) return;
+  const validos = ['PEDIDO SOLICITADO','SOLICITADO AO FORNECEDOR','CHEGOU'];
+  if (!validos.includes(novo)) { alert('Status inválido.'); return; }
+
+  const body = new URLSearchParams();
+  body.append('id', String(id));
+  body.append('status', novo);
+  body.append('prazo', ''); // manter prazo como está
+
+  fetch('atualizar_status_solicitacao.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: body.toString()
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (!j.ok) throw new Error(j.erro || 'Falha ao alterar status.');
+    carregarSolicitacoes();
+  })
+  .catch(e => alert(e.message));
+}
+
+/***********************
  * INICIALIZAÇÃO
  ***********************/
 document.addEventListener('DOMContentLoaded', () => {
   atualizarSelectsMateriais();
-  // quem define a tela inicial é o index.html (dashboard),
-  // mas se quiser garantir aqui também, descomente:
-  // mostrarTela('dashboard');
+
+  // submit do form de "Nova Solicitação"
+  const fNova = document.getElementById('formNovaSolic');
+  if (fNova) {
+    fNova.addEventListener('submit', (e) => {
+      e.preventDefault();
+      criarSolicitacao();
+    });
+  }
 });
+
+
+/* ======= PATCH Solicitações v3.1 — força ordem das colunas e ações ======= */
+console.log('Solicitações JS patch v3.1 carregado');
+
+function badgeStatus(s) {
+  if (s === 'PEDIDO SOLICITADO') return `<span class="badge s1">${s}</span>`;
+  if (s === 'SOLICITADO AO FORNECEDOR') return `<span class="badge s2">${s}</span>`;
+  if (s === 'CHEGOU') return `<span class="badge s3">${s}</span>`;
+  return s || '—';
+}
+
+/* Render de uma linha na ORDEM correta:
+   ID | Material | Categoria | Qtd | Motivo | Status(texto) | Prazo | Atualizado | Ações  */
+function renderSolicRow(item) {
+  const tr = document.createElement('tr');
+  tr.dataset.id = item.id;
+
+  const prazo = item.prazo ? item.prazo : '—';
+  const atualizado = (item.atualizado_em || '').replace('T', ' ');
+  const motivo = (item.motivo || '').trim() || '—';
+  const qtd = Number(item.quantidade || 0) > 0 ? item.quantidade : '—';
+
+  tr.innerHTML = `
+    <td>#${item.id}</td>
+    <td>${item.nome_material}</td>
+    <td>${item.categoria}</td>
+    <td>${qtd}</td>
+    <td>${motivo}</td>
+    <td class="cel-status">${badgeStatus(item.status)}</td>
+    <td>${prazo}</td>
+    <td>${atualizado}</td>
+    <td class="cel-acoes">
+      <details class="menu-acoes">
+        <summary>⋮ Ações</summary>
+        <div class="menu">
+          <button onclick="alterarStatusInline(${item.id}, '${(item.status||'').replace(/'/g, "\\'")}'); this.closest('details').open=false;">Alterar status</button>
+          <button onclick="excluirSolicitacao(${item.id}); this.closest('details').open=false;">Excluir</button>
+        </div>
+      </details>
+    </td>
+  `;
+  return tr;
+}
+
+// Abre edição inline de STATUS: vira um <select> na própria célula + salvar/cancelar
+function alterarStatusInline(id, statusAtual) {
+  const tr = document.querySelector(`#tabelaSolicitacoes tr[data-id="${id}"]`);
+  if (!tr) return;
+  const tdStatus = tr.querySelector('.cel-status');
+  const tdAcoes  = tr.querySelector('.cel-acoes');
+
+  const op = (v,t) => `<option value="${v}" ${v===statusAtual?'selected':''}>${t}</option>`;
+  tdStatus.dataset.prev = statusAtual;
+  tdStatus.innerHTML = `
+    <select class="sel-status">
+      ${op('PEDIDO SOLICITADO','PEDIDO SOLICITADO')}
+      ${op('SOLICITADO AO FORNECEDOR','SOLICITADO AO FORNECEDOR')}
+      ${op('CHEGOU','CHEGOU')}
+    </select>
+  `;
+
+  tdAcoes.dataset.prev = tdAcoes.innerHTML;
+  tdAcoes.innerHTML = `
+    <button class="btn-acao btn-salvar" onclick="salvarStatusSolic(${id})">Salvar</button>
+    <button class="btn-acao btn-cancelar" onclick="cancelarStatusSolic(${id})">Cancelar</button>
+  `;
+}
+
+function cancelarStatusSolic(id){
+  const tr = document.querySelector(`#tabelaSolicitacoes tr[data-id="${id}"]`);
+  if (!tr) return;
+  const tdStatus = tr.querySelector('.cel-status');
+  const tdAcoes  = tr.querySelector('.cel-acoes');
+  const prev = tdStatus.dataset.prev || '';
+  tdStatus.innerHTML = badgeStatus(prev);
+  tdAcoes.innerHTML = tdAcoes.dataset.prev || '';
+}
+
+function salvarStatusSolic(id){
+  const tr = document.querySelector(`#tabelaSolicitacoes tr[data-id="${id}"]`);
+  if (!tr) return;
+  const novo = tr.querySelector('.cel-status .sel-status')?.value;
+  if (!novo) return;
+
+  const body = new URLSearchParams({ id: String(id), status: novo, prazo: '' });
+  fetch('atualizar_status_solicitacao.php', {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: body.toString()
+  })
+  .then(r=>r.json())
+  .then(j=>{
+    if(!j.ok) throw new Error(j.erro || 'Falha ao alterar status.');
+    carregarSolicitacoes();
+  })
+  .catch(e=>{
+    alert(e.message);
+    cancelarStatusSolic(id);
+  });
+}
+
+// Excluir (permanece igual)
+function excluirSolicitacao(id) {
+  if (!confirm("Tem certeza que deseja excluir esta solicitação?")) return;
+
+  const body = new URLSearchParams({ id: String(id) });
+  fetch("excluir_solicitacao.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString()
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (!j.ok) throw new Error(j.erro || "Falha ao excluir.");
+    carregarSolicitacoes();
+  })
+  .catch(e => alert(e.message));
+}
+
+
+/* Sobrescreve o listador antigo */
+window.carregarSolicitacoes = function carregarSolicitacoes() {
+  fetch('listar_solicitacoes.php')
+    .then(r => r.json())
+    .then(lista => {
+      const tbody = document.querySelector('#tabelaSolicitacoes tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!lista || lista.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="9">Nenhuma solicitação cadastrada.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      lista.forEach(item => tbody.appendChild(renderSolicRow(item)));
+    })
+    .catch(err => console.error(err));
+};
+
+/* Criação (mantém nomes dos campos que você já usa no form) */
+window.criarSolicitacao = function criarSolicitacao() {
+  const nome  = (document.getElementById('sol_nome')?.value || '').trim();
+  const cat   = document.getElementById('sol_categoria')?.value || '';
+  const qtd   = parseInt(document.getElementById('sol_qtd')?.value || '1', 10);
+  const mot   = (document.getElementById('sol_motivo')?.value || '').trim();
+  const prazo = document.getElementById('sol_prazo')?.value || '';
+
+  if (!nome || !cat || !mot) return alert('Preencha Material, Categoria e Motivo.');
+  if (!Number.isFinite(qtd) || qtd <= 0) return alert('Quantidade inválida.');
+
+  const body = new URLSearchParams({
+    nome_material: nome, categoria: cat, quantidade: String(qtd), motivo: mot, prazo
+  });
+
+  fetch('criar_solicitacao.php', {
+    method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: body.toString()
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (!j.ok) throw new Error(j.erro || 'Falha ao criar.');
+    // limpa form
+    document.getElementById('sol_nome').value = '';
+    document.getElementById('sol_qtd').value = '1';
+    document.getElementById('sol_motivo').value = '';
+    document.getElementById('sol_prazo').value = '';
+    carregarSolicitacoes();
+  })
+  .catch(e => alert(e.message));
+};
+
+/* Edição inline: edita Qtd, Motivo, Prazo (Status é alterado à parte) */
+window.entrarEdicaoSolic = function entrarEdicaoSolic(id) {
+  const tr = document.querySelector(`#tabelaSolicitacoes tr[data-id="${id}"]`);
+  if (!tr) return;
+
+  const tdQtd    = tr.querySelector('.cel-qtd');
+  const tdMotivo = tr.querySelector('.cel-motivo');
+  const tdPrazo  = tr.querySelector('.cel-prazo');
+  const tdAcoes  = tr.querySelector('.cel-acoes');
+
+  const qtdAtual    = (tdQtd.textContent || '1').trim().replace(/\D+/g,'') || '1';
+  const motivoAtual = (tdMotivo.textContent || '').trim();
+  const prazoAtual  = (tdPrazo.textContent || '').trim();
+  const prazoVal    = /^\d{4}-\d{2}-\d{2}$/.test(prazoAtual) ? prazoAtual : '';
+
+  tdQtd.innerHTML    = `<input type="number" min="1" step="1" value="${qtdAtual}">`;
+  tdMotivo.innerHTML = `<textarea rows="2">${motivoAtual === '—' ? '' : motivoAtual}</textarea>`;
+  tdPrazo.innerHTML  = `<input type="date" value="${prazoVal}">`;
+
+  tdAcoes.innerHTML = `
+    <button class="btn-acao btn-salvar" onclick="salvarEdicaoSolic(${id})">Salvar</button>
+    <button class="btn-acao btn-cancelar" onclick="cancelarEdicaoSolic(${id})">Cancelar</button>
+  `;
+};
+
+window.cancelarEdicaoSolic = function cancelarEdicaoSolic() {
+  carregarSolicitacoes();
+};
+
+window.salvarEdicaoSolic = function salvarEdicaoSolic(id) {
+  const tr = document.querySelector(`#tabelaSolicitacoes tr[data-id="${id}"]`);
+  if (!tr) return;
+
+  const qtd    = parseInt(tr.querySelector('.cel-qtd input')?.value || '1', 10);
+  const motivo = (tr.querySelector('.cel-motivo textarea')?.value || '').trim();
+  const prazo  = (tr.querySelector('.cel-prazo input[type="date"]')?.value || '').trim();
+
+  if (!Number.isFinite(qtd) || qtd <= 0) return alert('Quantidade inválida.');
+
+  const body = new URLSearchParams({ id: String(id), quantidade: String(qtd), motivo, prazo });
+
+  fetch('editar_solicitacao.php', {
+    method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: body.toString()
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (!j.ok) throw new Error(j.erro || 'Falha ao salvar.');
+    carregarSolicitacoes();
+  })
+  .catch(e => alert(e.message));
+};
+
+/* Alterar só o status (coluna Status mostra texto) */
+window.abrirAlterarStatus = function abrirAlterarStatus(id, statusAtual) {
+  const novo = prompt(
+    "Novo status (digite exatamente):\n- PEDIDO SOLICITADO\n- SOLICITADO AO FORNECEDOR\n- CHEGOU", statusAtual || 'PEDIDO SOLICITADO'
+  );
+  if (!novo) return;
+  const validos = ['PEDIDO SOLICITADO','SOLICITADO AO FORNECEDOR','CHEGOU'];
+  if (!validos.includes(novo)) return alert('Status inválido.');
+
+  const body = new URLSearchParams({ id: String(id), status: novo, prazo: '' });
+
+  fetch('atualizar_status_solicitacao.php', {
+    method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: body.toString()
+  })
+  .then(r => r.json())
+  .then(j => {
+    if (!j.ok) throw new Error(j.erro || 'Falha ao alterar status.');
+    carregarSolicitacoes();
+  })
+  .catch(e => alert(e.message));
+};
+

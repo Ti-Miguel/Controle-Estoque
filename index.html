@@ -13,8 +13,63 @@
 </script>
 
   <!-- bump de versão para limpar cache -->
-  <link rel="stylesheet" href="style.css?v=12" />
-  <link rel="icon" href="logo.jpeg" type="image/jpeg" />
+  <link rel="stylesheet" href="style.css?v=15">
+  <!-- PATCH visual da aba Solicitações (independente do style.css) -->
+<style id="solic-patch">
+  /* .main em COLUNA e centralizada só na aba Solicitações */
+  .main.solic-flex{
+    display:flex !important;
+    flex-direction: column !important;   /* <<< aqui está a correção */
+    align-items: center !important;      /* centraliza os filhos na horizontal */
+  }
+  .main.solic-flex > .topbar{ width:100% !important; }
+
+  /* bloco Solicitações centralizado e com largura máxima */
+  #solicitacoes{
+    width:100% !important;
+    max-width:1200px !important;
+    margin:0 auto !important;
+    box-sizing:border-box !important;
+  }
+
+  /* grid interna: form menor, lista maior */
+  #solicitacoes .grid-solic{
+    display:grid !important;
+    grid-template-columns:0.34fr 0.66fr !important;
+    gap:16px !important;
+    align-items:flex-start !important;
+  }
+  @media (max-width:1024px){
+    #solicitacoes .grid-solic{ grid-template-columns:1fr !important; }
+  }
+
+  /* tabela estável (sem texto em pé) */
+  #solicitacoes .table-responsive{ width:100% !important; overflow-x:auto !important; }
+  #tabelaSolicitacoes{
+    width:100% !important;
+    border-collapse:collapse !important;
+    table-layout:auto !important;
+    min-width:760px !important;
+  }
+  #tabelaSolicitacoes th, #tabelaSolicitacoes td{
+    padding:8px 10px !important;
+    text-align:left !important;
+    white-space:nowrap !important;
+  }
+
+  /* larguras (com Qtd) – ajuste fino */
+  #tabelaSolicitacoes th:nth-child(1), #tabelaSolicitacoes td:nth-child(1){ width:72px !important; }   /* ID */
+  #tabelaSolicitacoes th:nth-child(2), #tabelaSolicitacoes td:nth-child(2){ width:24% !important; }    /* Material */
+  #tabelaSolicitacoes th:nth-child(3), #tabelaSolicitacoes td:nth-child(3){ width:14% !important; }    /* Categoria */
+  #tabelaSolicitacoes th:nth-child(4), #tabelaSolicitacoes td:nth-child(4){ width:8%  !important; }    /* Qtd */
+  #tabelaSolicitacoes th:nth-child(5), #tabelaSolicitacoes td:nth-child(5){ width:18% !important; }    /* Motivo */
+  #tabelaSolicitacoes th:nth-child(6), #tabelaSolicitacoes td:nth-child(6){ width:170px !important; }  /* Status */
+  #tabelaSolicitacoes th:nth-child(7), #tabelaSolicitacoes td:nth-child(7){ width:130px !important; }  /* Prazo */
+  #tabelaSolicitacoes th:nth-child(8), #tabelaSolicitacoes td:nth-child(8){ width:150px !important; }  /* Atualizado */
+  #tabelaSolicitacoes th:nth-child(9), #tabelaS
+</style>
+
+<link rel="icon" href="logo.jpeg" type="image/jpeg">
 </head>
 
 <body>
@@ -27,11 +82,11 @@
     <button onclick="menuNavigate('entrada')" aria-label="Entrada de Material">➕ Entrada</button>
     <button onclick="menuNavigate('saida')" aria-label="Saída de Material">➖ Saída</button>
     <button onclick="menuNavigate('relatorioEstoque')" aria-label="Relatório de Estoque">📦 Estoque</button>
-    <button onclick="menuNavigate('relatorioHistorico')" aria-label="Histórico">📜 Histórico</button>
+    <button onclick="menuNavigate('relatorioHistorico')" aria-label="Histórico">🕑 Histórico</button>
     <button onclick="menuNavigate('materiais')" aria-label="Gerenciar Materiais">🛠️ Materiais</button>
+    <button onclick="menuNavigate('solicitacoes')" aria-label="Solicitações">🧾 Solicitações</button>
 
-    <hr class="menu-divisor" />
-    <button class="btn-sair" onclick="sair()" aria-label="Sair">🚪 Sair</button>
+
   </div>
 
   <!-- Overlay (apenas mobile) -->
@@ -76,6 +131,7 @@
         <button onclick="menuNavigate('saida')">➖ Registrar Saída</button>
         <button onclick="menuNavigate('relatorioEstoque')">📦 Relatório de Estoque</button>
         <button onclick="menuNavigate('relatorioHistorico')">🕑 Histórico</button>
+        <button onclick="menuNavigate('solicitacoes')">🧾 Solicitações</button>
       </div>
 
       <div class="grid-2">
@@ -178,6 +234,63 @@
         </table>
       </div>
     </div>
+    
+<div id="solicitacoes" class="container" style="display:none;">
+  <h2>Solicitações de Compras</h2>
+
+  <!-- BLOCO 1: NOVA SOLICITAÇÃO -->
+  <div class="panel bloc-nova">
+    <h3>Nova Solicitação</h3>
+
+    <label>Nome do Material</label>
+    <input type="text" id="sol_nome" autocomplete="off" />
+
+    <label>Categoria</label>
+    <select id="sol_categoria">
+      <option value="MATERIAL GRÁFICO">MATERIAL GRÁFICO</option>
+      <option value="MATERIAL MÉDICO">MATERIAL MÉDICO</option>
+      <option value="MEDICAÇÕES">MEDICAÇÕES</option>
+      <option value="DISPOSITIVOS">DISPOSITIVOS</option>
+      <option value="MATERIAL DE ESCRITÓRIO">MATERIAL DE ESCRITÓRIO</option>
+    </select>
+
+    <label>Quantidade</label>
+    <input type="number" id="sol_qtd" min="1" step="1" value="1" />
+
+    <label>Motivo</label>
+    <textarea id="sol_motivo" rows="3"></textarea>
+
+    <label>Prazo (opcional)</label>
+    <input type="date" id="sol_prazo" />
+
+    <button id="btnCriarSolic" type="button" onclick="criarSolicitacao()">Enviar</button>
+  </div>
+
+  <!-- BLOCO 2: LISTA / HISTÓRICO -->
+  <div class="panel bloc-lista">
+    <h3>Solicitações em Aberto / Histórico</h3>
+    <div class="table-responsive">
+      <table id="tabelaSolicitacoes">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Material</th>
+            <th>Categoria</th>
+            <th>Qtd</th>
+            <th>Motivo</th>
+            <th>Status</th>
+            <th>Prazo</th>
+            <th>Atualizado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
 
     <!-- GERENCIAR MATERIAIS -->
     <div id="materiais" class="container" style="display:none;">
@@ -207,10 +320,11 @@
       <div id="listaMateriais" style="margin-top: 20px;"></div>
     </div>
   </div>
+  
+  
 
   <!-- JS principal do sistema -->
-  <script src="script.js?v=12"></script>
-
+<script src="script.js?v=18"></script>
   <!-- JS de layout/menu + exportações -->
   <script>
     /* ====== MENU OPTATIVO COM PERSISTÊNCIA ====== */
