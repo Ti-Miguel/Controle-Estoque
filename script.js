@@ -41,6 +41,10 @@ function atualizarSelectsMateriais() {
  * NAVEGAÇÃO ENTRE TELAS
  ***********************/
 function mostrarTela(nomeTela) {
+    if (nomeTela === 'solicitacoes') {
+  alert('A aba de Solicitações está temporariamente offline.');
+  return;
+}
   const telas = ['dashboard', 'entrada', 'saida', 'relatorioEstoque', 'relatorioHistorico', 'materiais', 'solicitacoes'];
   telas.forEach(tela => {
     const el = document.getElementById(tela);
@@ -182,19 +186,24 @@ function entrarModoEdicao(tr, material) {
 
   const selectTipo = document.createElement('select');
   selectTipo.className = 'input-editar';
-  [
-    'MATERIAL GRÁFICO',
-    'MATERIAL MÉDICO',
-    'MEDICAÇÕES',
-    'DISPOSITIVOS',
-    'MATERIAL DE ESCRITÓRIO'
-  ].forEach(op => {
-    const o = document.createElement('option');
-    o.value = op;
-    o.textContent = op;
-    if (op === material.tipo) o.selected = true;
-    selectTipo.appendChild(o);
-  });
+ [
+  'MATERIAL GRÁFICO',
+  'MATERIAL MÉDICO',
+  'MEDICAÇÕES',
+  'DISPOSITIVOS',
+  'MATERIAL DE ESCRITÓRIO',
+
+  // Novas (Zeladoria)
+  'COZINHA',
+  'DESCARTAVEL',
+  'PRODUTOS'
+].forEach(op => {
+  const o = document.createElement('option');
+  o.value = op;
+  o.textContent = op;
+  if (op === material.tipo) o.selected = true;
+  selectTipo.appendChild(o);
+});
 
   tdNome.innerHTML = '';
   tdTipo.innerHTML = '';

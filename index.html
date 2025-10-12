@@ -84,7 +84,7 @@
     <button onclick="menuNavigate('relatorioEstoque')" aria-label="Relatório de Estoque">📦 Estoque</button>
     <button onclick="menuNavigate('relatorioHistorico')" aria-label="Histórico">🕑 Histórico</button>
     <button onclick="menuNavigate('materiais')" aria-label="Gerenciar Materiais">🛠️ Materiais</button>
-    <button onclick="menuNavigate('solicitacoes')" aria-label="Solicitações">🧾 Solicitações</button>
+<!-- <button onclick="menuNavigate('solicitacoes')" aria-label="Solicitações">📋 Solicitações</button> -->
 
 
   </div>
@@ -207,7 +207,10 @@
         <!-- NOVOS -->
         <button class="btn-categoria" onclick="abrirRelatorio('DISPOSITIVOS')" aria-label="Dispositivos">🧷 Dispositivos</button>
         <button class="btn-categoria" onclick="abrirRelatorio('MATERIAL DE ESCRITÓRIO')" aria-label="Material de Escritório">📒 Material de Escritório</button>
-      </div>
+        <button class="btn-categoria" onclick="abrirRelatorio('COZINHA')" aria-label="Cozinha">🍽️ Cozinha</button>
+    <button class="btn-categoria" onclick="abrirRelatorio('DESCARTAVEL')" aria-label="Descartável">🗑️ Descartável</button>
+    <button class="btn-categoria" onclick="abrirRelatorio('PRODUTOS')" aria-label="Produtos de Zeladoria">🧴 Produtos</button>
+          </div>
       <p class="hint">Clique em uma categoria para abrir o relatório detalhado em outra página.</p>
 
       <!-- (opcional) tabela geral oculta -->
@@ -235,7 +238,7 @@
       </div>
     </div>
     
-<div id="solicitacoes" class="container" style="display:none;">
+<div id="solicitacoes" class="container" style="display:none;" data-offline="true">
   <h2>Solicitações de Compras</h2>
 
   <!-- BLOCO 1: NOVA SOLICITAÇÃO -->
@@ -313,7 +316,10 @@
         <!-- NOVOS -->
         <option value="DISPOSITIVOS">DISPOSITIVOS</option>
         <option value="MATERIAL DE ESCRITÓRIO">MATERIAL DE ESCRITÓRIO</option>
-      </select>
+        <option value="COZINHA">COZINHA</option>
+        <option value="DESCARTAVEL">DESCARTAVEL</option>
+        <option value="PRODUTOS">PRODUTOS</option>
+              </select>
 
       <button onclick="adicionarMaterial()">Adicionar Material</button>
 
@@ -452,5 +458,18 @@
       // win.close(); // se quiser fechar automaticamente após imprimir
     }
   </script>
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const solicit = document.getElementById('solicitacoes');
+  if (solicit && solicit.dataset.offline === "true") {
+    // Se alguém acessar direto pela URL
+    if (window.location.hash.includes('solicitacoes')) {
+      alert("A aba de Solicitações está temporariamente offline para manutenção.");
+      window.location.href = "index.html"; // volta para o início
+    }
+  }
+});
+</script>
+
 </body>
 </html>
